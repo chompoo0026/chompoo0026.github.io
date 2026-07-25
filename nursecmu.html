@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 Shift & Salary Planner 🌸</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #FFF5F7;
+            --card-bg: #FFFFFF;
+            --primary-pink: #FFB7B2;
+            --soft-pink: #FFDAC1;
+            --text-dark: #5C4B51;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mitr', 'Prompt', sans-serif;
+            color: var(--text-dark);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(255, 183, 178, 0.3);
+            position: relative;
+        }
+
+        .sync-status {
+            font-size: 10px;
+            text-align: right;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            color: #FF7B89;
+            margin: 0 0 5px 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #FFB7B2 0%, #FFDAC1 100%);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 183, 178, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .summary-card p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .summary-card h2 {
+            margin: 5px 0 0 0;
+            font-size: 32px;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .shift-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+            background: #FAFAFA;
+            padding: 10px;
+            border-radius: 14px;
+            border: 1px solid #F0F0F0;
+        }
+
+        .btn-shift {
+            padding: 8px 2px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background-color: #F0F0F0;
+        }
+
+        .btn-shift span {
+            display: block;
+            font-size: 9px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .btn-m-out { background-color: #FFE5EC; color: #D81B60; }
+        .btn-m-phai { background-color: #E8F5E9; color: #2E7D32; }
+        .btn-m-eid { background-color: #E3F2FD; color: #1565C0; }
+        .btn-a-out { background-color: #FFF3E0; color: #E65100; }
+        .btn-extra-eye { background-color: #E0FEFE; color: #00838F; }
+        .btn-clinic { background-color: #F3E5F5; color: #7B1FA2; }
+        .btn-add-custom { background-color: #FFF9C4; color: #F57F17; border: 1px dashed #FBC02D; }
+        .btn-eraser { background-color: #ECEFF1; color: #546E7A; grid-column: span 3; margin-top: 2px; }
+
+        .btn-shift.active {
+            border-color: #FF7B89 !important;
+            transform: scale(1.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 8px;
+        }
+
+        .calendar-nav button:hover {
+            background: #FFE5EC;
+        }
+
+        .calendar-nav h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #5C4B51;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .day-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #A0A0A0;
+            padding-bottom: 5px;
+        }
+
+        .day-cell {
+            min-height: 56px;
+            border-radius: 10px;
+            background: #FAFAFA;
+            padding: 3px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            font-size: 11px;
+            border: 1px solid #F5F5F5;
+            transition: all 0.1s ease;
+        }
+
+        .day-cell:hover {
+            background: #FFF0F5;
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
+        .badges-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .shift-badge {
+            font-size: 7.5px;
+            padding: 1px 2px;
+            border-radius: 4px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.1;
+        }
+
+        .badge-เช้าโอนอก { background: #FFE5EC; color: #D81B60; }
+        .badge-เช้าไผ่ล้อม { background: #E8F5E9; color: #2E7D32; }
+        .badge-เช้าEID { background: #E3F2FD; color: #1565C0; }
+        .badge-บ่ายโอนอก { background: #FFF3E0; color: #E65100; }
+        .badge-โอนอกตา { background: #E0FEFE; color: #00838F; }
+        .badge-คลินิก { background: #F3E5F5; color: #7B1FA2; }
+        .badge-custom { background: #FFF9C4; color: #F57F17; }
+
+        .shift-stats {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #FFD1D1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            background: #FAF8F8;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sync-status" id="sync-status">🔄 กำลังเชื่อมต่อ Cloud...</div>
+    
+    <div class="header">
+        <h1>🌷 My Shift & Money 🌷</h1>
+        <p style="font-size: 12px; color: #888; margin:0;">เลือกเวร แล้วกดใส่ในวันที่ต้องการ (ซิงค์หลายเครื่อง)</p>
+    </div>
+
+    <div class="summary-card">
+        <p>รายได้รวมเดือนนี้</p>
+        <h2 id="total-salary">0 ฿</h2>
+    </div>
+
+    <div class="shift-selector" id="shift-selector">
+        <button class="btn-shift btn-m-out active" onclick="selectShift('เช้าโอนอก', this)">
+            ☀️ เช้าโอนอก
+            <span>750.-</span>
+        </button>
+        <button class="btn-shift btn-m-phai" onclick="selectShift('เช้าไผ่ล้อม', this)">
+            🌿 เช้าไผ่ล้อม
+            <span>750.-</span>
+        </button>
+        <button class="btn-shift btn-m-eid" onclick="selectShift('เช้าEID', this)">
+            🏥 เช้า EID
+            <span>750.-</span>
+        </button>
+        <button class="btn-shift btn-a-out" onclick="selectShift('บ่ายโอนอก', this)">
+            🌤️ บ่ายโอนอก
+            <span>850.-</span>
+        </button>
+        <button class="btn-shift btn-extra-eye" onclick="selectShift('โอนอกตา', this)">
+            🌙 โอนอกตา
+            <span>475.-</span>
+        </button>
+        <button class="btn-shift btn-clinic" onclick="selectShift('คลินิก', this)">
+            🩺 คลินิก
+            <span>580.-</span>
+        </button>
+        
+        <!-- ส่วนแสดงปุ่มเวรอื่นๆ ที่เพิ่มเข้ามาจะถูกใส่ตรงนี้ -->
+        <div id="custom-buttons-area" style="display: contents;"></div>
+
+        <button class="btn-shift btn-add-custom" onclick="addNewShiftPrompt()">
+            ➕ เพิ่มเวรอื่นๆ
+            <span>กำหนดเอง</span>
+        </button>
+
+        <button class="btn-shift btn-eraser" onclick="selectShift('clear', this)">
+            🧹 ลบทั้งหมดในวันนี้
+        </button>
+    </div>
+
+    <div class="calendar-nav">
+        <button onclick="changeMonth(-1)">❮</button>
+        <h3 id="month-year-label">เดือน ปี</h3>
+        <button onclick="changeMonth(1)">❯</button>
+    </div>
+
+    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div class="shift-stats" id="shift-stats"></div>
+</div>
+
+<script>
+    const JSONBIN_API_KEY = '$2a$10$tvWcKUzhOL06wfICkZUBXeAN8Jo5e0nBmeUqH/tF4tLAIDcgRtgny';
+    const JSONBIN_BIN_ID = '6a64c36ff5f4af5e29bfdea4';
+
+    let SHIFT_RATES = {
+        'เช้าโอนอก': 750,
+        'เช้าไผ่ล้อม': 750,
+        'เช้าEID': 750,
+        'บ่ายโอนอก': 850,
+        'โอนอกตา': 475,
+        'คลินิก': 580
+    };
+
+    let currentDate = new Date();
+    let selectedShift = 'เช้าโอนอก';
+    let appData = {
+        customRates: {},
+        shifts: {}
+    };
+
+    const monthNames = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+
+    function updateStatus(msg) {
+        document.getElementById('sync-status').innerText = msg;
+    }
+
+    async function loadCloudData() {
+        updateStatus('🔄 กำลังโหลดข้อมูลจาก Cloud...');
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                const record = json.record || {};
+                
+                // รองรับข้อมูลเดิมหรือโครงสร้างใหม่
+                if (record.shifts) {
+                    appData = record;
+                } else {
+                    appData = { customRates: {}, shifts: record };
+                }
+
+                // รวมอัตราค่าเวรที่กำหนดเองเข้ากับ SHIFT_RATES
+                if (appData.customRates) {
+                    Object.assign(SHIFT_RATES, appData.customRates);
+                }
+
+                renderCustomButtons();
+                renderCalendar();
+                updateStatus('☁️ ซิงค์ข้อมูลล่าสุดเรียบร้อย');
+            } else {
+                updateStatus('❌ โหลดข้อมูลไม่สำเร็จ');
+            }
+        } catch (e) {
+            updateStatus('❌ ไม่สามารถเชื่อมต่อระบบ Cloud ได้');
+        }
+    }
+
+    async function saveCloudData() {
+        updateStatus('⏳ กำลังบันทึก...');
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_API_KEY
+                },
+                body: JSON.stringify(appData)
+            });
+            if (res.ok) {
+                updateStatus('✅ บันทึกลง Cloud สำเร็จแล้ว');
+            } else {
+                updateStatus('❌ บันทึกไม่สำเร็จ');
+            }
+        } catch (e) {
+            updateStatus('❌ เกิดข้อผิดพลาดขณะบันทึก');
+        }
+    }
+
+    function addNewShiftPrompt() {
+        const shiftName = prompt("ใส่ชื่อเวรที่ต้องการเพิ่ม (เช่น เวรดึก, OT พิเศษ):");
+        if (!shiftName || shiftName.trim() === "") return;
+
+        const rateStr = prompt(`ระบุจำนวนเงินสำหรับเวร "${shiftName.trim()}" (บาท):`);
+        const rate = parseFloat(rateStr);
+
+        if (isNaN(rate) || rate < 0) {
+            alert("กรุณาระบุจำนวนเงินให้ถูกต้องครับ");
+            return;
+        }
+
+        const cleanName = shiftName.trim();
+        SHIFT_RATES[cleanName] = rate;
+        
+        if (!appData.customRates) appData.customRates = {};
+        appData.customRates[cleanName] = rate;
+
+        renderCustomButtons();
+        saveCloudData();
+    }
+
+    function renderCustomButtons() {
+        const area = document.getElementById('custom-buttons-area');
+        area.innerHTML = '';
+
+        if (appData.customRates) {
+            Object.keys(appData.customRates).forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-shift btn-add-custom';
+                btn.innerHTML = `✨ ${name} <span>${appData.customRates[name]}.-</span>`;
+                btn.onclick = () => selectShift(name, btn);
+                area.appendChild(btn);
+            });
+        }
+    }
+
+    function selectShift(type, element) {
+        selectedShift = type;
+        document.querySelectorAll('.btn-shift').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        document.getElementById('month-year-label').innerText = `${monthNames[month]} ${year + 543}`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+
+        const dayLabels = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+        dayLabels.forEach(day => {
+            const label = document.createElement('div');
+            label.className = 'day-label';
+            label.innerText = day;
+            grid.appendChild(label);
+        });
+
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'day-cell empty';
+            grid.appendChild(emptyCell);
+        }
+
+        const shiftData = appData.shifts || {};
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            
+            const dayNum = document.createElement('span');
+            dayNum.innerText = day;
+            dayNum.style.fontWeight = "500";
+            cell.appendChild(dayNum);
+
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            const badgesContainer = document.createElement('div');
+            badgesContainer.className = 'badges-container';
+
+            if (shiftData[dateKey] && shiftData[dateKey].length > 0) {
+                shiftData[dateKey].forEach(shift => {
+                    const badge = document.createElement('div');
+                    let bgClass = `badge-${shift}`;
+                    if (!['เช้าโอนอก','เช้าไผ่ล้อม','เช้าEID','บ่ายโอนอก','โอนอกตา','คลินิก'].includes(shift)) {
+                        bgClass = 'badge-custom';
+                    }
+                    badge.className = `shift-badge ${bgClass}`;
+                    badge.innerText = shift;
+                    badgesContainer.appendChild(badge);
+                });
+            }
+            
+            cell.appendChild(badgesContainer);
+            cell.onclick = () => toggleShift(dateKey);
+            grid.appendChild(cell);
+        }
+
+        calculateTotal();
+    }
+
+    function toggleShift(dateKey) {
+        if (!appData.shifts) appData.shifts = {};
+        let shiftData = appData.shifts;
+
+        if (!shiftData[dateKey]) {
+            shiftData[dateKey] = [];
+        }
+
+        if (selectedShift === 'clear') {
+            shiftData[dateKey] = [];
+        } else {
+            const index = shiftData[dateKey].indexOf(selectedShift);
+            if (index > -1) {
+                shiftData[dateKey].splice(index, 1);
+            } else {
+                shiftData[dateKey].push(selectedShift);
+            }
+        }
+
+        if (shiftData[dateKey].length === 0) {
+            delete shiftData[dateKey];
+        }
+
+        renderCalendar();
+        saveCloudData();
+    }
+
+    function changeMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+    }
+
+    function calculateTotal() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+        let totalSalary = 0;
+        let counts = {};
+        
+        Object.keys(SHIFT_RATES).forEach(k => counts[k] = 0);
+
+        const shiftData = appData.shifts || {};
+
+        Object.keys(shiftData).forEach(key => {
+            if (key.startsWith(monthPrefix)) {
+                shiftData[key].forEach(shift => {
+                    if (SHIFT_RATES[shift] !== undefined) {
+                        totalSalary += SHIFT_RATES[shift];
+                        counts[shift] = (counts[shift] || 0) + 1;
+                    }
+                });
+            }
+        });
+
+        document.getElementById('total-salary').innerText = `${totalSalary.toLocaleString()} ฿`;
+
+        const statsContainer = document.getElementById('shift-stats');
+        statsContainer.innerHTML = '';
+        
+        Object.keys(counts).forEach(shift => {
+            if (counts[shift] > 0 || ['เช้าโอนอก','เช้าไผ่ล้อม','เช้าEID','บ่ายโอนอก','โอนอกตา','คลินิก'].includes(shift)) {
+                const item = document.createElement('div');
+                item.className = 'stat-item';
+                item.innerHTML = `${shift}: <b>${counts[shift]}</b>`;
+                statsContainer.appendChild(item);
+            }
+        });
+    }
+
+    loadCloudData();
+</script>
+
+</body>
+</html>
