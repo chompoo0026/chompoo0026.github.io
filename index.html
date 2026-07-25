@@ -122,7 +122,7 @@
             color: #555;
         }
 
-        input, select {
+        input, select, textarea {
             font-family: 'Prompt', sans-serif;
             padding: 10px;
             border: 1px solid #ddd;
@@ -131,7 +131,7 @@
             outline: none;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--accent-color);
             box-shadow: 0 0 5px rgba(108, 92, 231, 0.3);
         }
@@ -212,11 +212,17 @@
         .cal-cell {
             background: #fff;
             border: 1px solid #eee;
-            min-height: 80px;
+            min-height: 90px;
             padding: 5px;
             border-radius: 6px;
             font-size: 12px;
             position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cal-cell:hover {
+            background-color: #f9f9ff;
+            border-color: var(--primary-color);
         }
         .cal-day-num {
             font-weight: bold;
@@ -233,6 +239,17 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .cal-custom-event {
+            background: #00b894;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 2px;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -240,7 +257,7 @@
 <div class="container">
     <header>
         <h1>🪻 ระบบบันทึกและติดตามผู้ป่วยเคมีบำบัด 🪻</h1>
-        <p>บันทึกข้อมูลผู้ป่วย แจ้งเตือนวันหมดอายุเอกสาร และรอบการให้ยา 🌙</p>
+        <p>เชื่อมโยงข้อมูลคลาวด์ JSONBin (เชื่อมต่ออัตโนมัติแล้ว) 🌙</p>
     </header>
 
     <!-- Navigation Buttons -->
@@ -250,10 +267,7 @@
         <button onclick="showSection('alertSection')">⚠️ แจ้งเตือนเอกสารใกล้หมดอายุ</button>
         <button onclick="showSection('drugFilterSection')">💊 แยกรายชื่อตามยา</button>
         <button onclick="showSection('calendarSection')">📅 ปฏิทินนัดหมาย</button>
-        <button onclick="showSection('settingsSection')">⚙️ ตั้งค่าระบบ/เพิ่มเติมฟิลด์</button>
-        <button onclick="exportData()" style="background-color: #00b894;">💾 สำรองข้อมูล</button>
-        <button onclick="importDataTrigger()" style="background-color: #0984e3;">📂 นำเข้าข้อมูล</button>
-        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        <button onclick="syncDataFromCloud()" style="background-color: #0984e3;">🔄 ซิงค์ข้อมูลกับคลาวด์</button>
     </div>
 
     <!-- 1. บันทึกข้อมูลผู้ป่วย -->
@@ -315,8 +329,8 @@
                     <label>ระบุชื่อยาอื่นๆ:</label>
                     <input type="text" id="pOtherDrug" placeholder="ชื่อยา...">
                 </div>
-                <div class="form-group" id="drugCountGroup">
-                    <label id="drugCountLabel">จำนวนครั้งที่ได้รับยา:</label>
+                <div class="form-group">
+                    <label>จำนวนครั้งที่ได้รับยา:</label>
                     <input type="number" id="pDrugCount" value="1" min="1">
                 </div>
                 <div class="form-group">
@@ -332,8 +346,7 @@
                     <input type="date" id="pNextAppoint">
                 </div>
             </div>
-            <div id="dynamicFieldsContainer"></div>
-            <button type="submit" style="margin-top: 15px;">💾 บันทึกข้อมูล</button>
+            <button type="submit" style="margin-top: 15px;">💾 บันทึกข้อมูลขึ้นคลาวด์</button>
         </form>
     </div>
 
@@ -363,7 +376,6 @@
     <!-- 3. แจ้งเตือนวันหมดอายุเอกสาร -->
     <div id="alertSection" class="section">
         <h2>⚠️ แจ้งเตือนเอกสารใกล้หมดอายุ (ภายใน 1 เดือน)</h2>
-        <p style="font-size:13px; color:#666;">รวบรวมกลุ่มผู้ป่วยที่เอกสารกำลังจะหมดอายุใน 1 เดือนข้างหน้าเพื่อความสะดวกในการติดตาม:</p>
         <div style="overflow-x: auto;">
             <table id="alertTable">
                 <thead>
@@ -413,33 +425,23 @@
 
     <!-- 5. ปฏิทินนัดหมาย -->
     <div id="calendarSection" class="section">
-        <h2>📅 ปฏิทินวันนัดผู้ป่วย</h2>
+        <h2>📅 ปฏิทินวันนัดหมายและบันทึกกิจกรรม</h2>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <button onclick="changeMonth(-1)">◀ เดือนก่อนหน้า</button>
             <h3 id="currentMonthYear" style="margin:0; color:var(--accent-color);"></h3>
             <button onclick="changeMonth(1)">เดือนถัดไป ▶</button>
         </div>
-        <div class="calendar-container" id="calendarGrid"></div>
-    </div>
-
-    <!-- 6. ตั้งค่าระบบ -->
-    <div id="settingsSection" class="section">
-        <h2>⚙️ ตั้งค่าระบบ / เพิ่มเติมฟิลด์ข้อมูลผู้ป่วย</h2>
-        <p>คุณสามารถเพิ่มฟิลด์ข้อมูลเพิ่มเติมได้ที่นี่ เช่น ระยะของมะเร็ง (Stage) หรือข้อมูลอื่นๆ ที่ต้องการเก็บในอนาคต</p>
-        <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
-            <label>ชื่อฟิลด์ข้อมูลใหม่:</label>
-            <input type="text" id="newFieldName" placeholder="เช่น ระยะของมะเร็ง (Stage)">
+        <div style="margin-bottom: 15px; text-align: right;">
+            <button onclick="openCalendarModal()" style="background-color: #00b894;">+ เพิ่มบันทึกในปฏิทิน</button>
         </div>
-        <button onclick="addCustomField()">+ เพิ่มฟิลด์นี้ในระบบ</button>
-        <h3 style="margin-top: 20px; font-size: 16px;">ฟิลด์เสริมที่มีอยู่:</h3>
-        <ul id="customFieldsList"></ul>
+        <div class="calendar-container" id="calendarGrid"></div>
     </div>
 </div>
 
 <!-- Modal แก้ไขข้อมูลผู้ป่วย -->
-<div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
-        <h3 style="margin-top:0; color:var(--accent-color);">แก้ไขข้อมูลผู้ป่วย / วันนัด</h3>
+<div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index: 1000;">
+    <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px;">
+        <h3 style="margin-top:0; color:var(--accent-color);">แก้ไขข้อมูลผู้ป่วย</h3>
         <form id="editForm" onsubmit="updatePatient(event)">
             <input type="hidden" id="editIndex">
             <div class="form-group"><label>ชื่อ-นามสกุล:</label><input type="text" id="editName" required></div>
@@ -454,11 +456,34 @@
     </div>
 </div>
 
+<!-- Modal เพิ่มข้อมูลในปฏิทิน -->
+<div id="calendarModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index: 1000;">
+    <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;">
+        <h3 style="margin-top:0; color:var(--accent-color);">📅 เพิ่มบันทึกในปฏิทิน</h3>
+        <form id="calendarForm" onsubmit="saveCalendarEvent(event)">
+            <div class="form-group"><label>วันที่:</label><input type="date" id="calEventDate" required></div>
+            <div class="form-group"><label>หัวข้อ/รายละเอียด:</label><input type="text" id="calEventTitle" required placeholder="เช่น ประชุม, วันหยุด"></div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button type="submit" style="background-color: #00b894;">บันทึก</button>
+                <button type="button" onclick="closeCalendarModal()" style="background-color: #ccc;">ยกเลิก</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    let patients = JSON.parse(localStorage.getItem('patients_data')) || [];
-    let customFields = JSON.parse(localStorage.getItem('custom_fields')) || [];
+    // 🔗 ตั้งค่า JSONBin ของคุณ (ใส่ค่าให้เรียบร้อยแล้ว)
+    const BIN_ID = '6a64a8d7da38895dfe8dfd2d';
+    const API_KEY = '$2a$10$tvWcKUzhOL06wfICkZUBXeAN8Jo5e0nBmeUqH/tF4tLAIDcgRtgny';
+
+    let patients = [];
+    let calendarEvents = [];
     let currentFilterDrug = 'all';
     let currentDate = new Date();
+
+    window.onload = function() {
+        syncDataFromCloud(true);
+    };
 
     function showSection(sectionId) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -467,7 +492,6 @@
         if(sectionId === 'alertSection') renderAlertTable();
         if(sectionId === 'drugFilterSection') filterByDrug(currentFilterDrug);
         if(sectionId === 'calendarSection') renderCalendar();
-        if(sectionId === 'settingsSection') renderCustomFields();
     }
 
     function checkOtherDisease() {
@@ -478,6 +502,36 @@
     function checkDrugType() {
         const val = document.getElementById('pDrug').value;
         document.getElementById('otherDrugGroup').style.display = (val === 'อื่นๆ') ? 'flex' : 'none';
+    }
+
+    // ซิงค์ข้อมูลกับ JSONBin
+    function syncDataFromCloud(isSilent = false) {
+        if(!isSilent) alert('กำลังซิงค์ข้อมูลกับคลาวด์...');
+        
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': API_KEY }
+        })
+        .then(response => response.json())
+        .then(data => {
+            patients = data.record.patients || [];
+            calendarEvents = data.record.calendarEvents || [];
+            if(!isSilent) alert('ซิงค์ข้อมูลสำเร็จ! 🪻');
+            renderCalendar();
+        })
+        .catch(error => {
+            if(!isSilent) alert('เกิดข้อผิดพลาดในการเชื่อมต่อคลาวด์');
+        });
+    }
+
+    function pushDataToCloud() {
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify({ patients, calendarEvents })
+        }).catch(err => console.error(err));
     }
 
     function savePatient(e) {
@@ -499,13 +553,12 @@
             drugCount: count,
             startDate: document.getElementById('pStartDate').value,
             expDate: document.getElementById('pExpDate').value,
-            nextAppoint: document.getElementById('pNextAppoint').value,
-            customData: {}
+            nextAppoint: document.getElementById('pNextAppoint').value
         };
 
         patients.push(newPatient);
-        localStorage.setItem('patients_data', JSON.stringify(patients));
-        alert('บันทึกข้อมูลสำเร็จ! 🪻');
+        pushDataToCloud();
+        alert('บันทึกข้อมูลขึ้นคลาวด์สำเร็จ! 🪻');
         document.getElementById('patientForm').reset();
         checkOtherDisease();
         checkDrugType();
@@ -516,8 +569,8 @@
         tbody.innerHTML = '';
         patients.forEach((p, index) => {
             let drugWarning = '';
-            if(p.drug === 'olaparib' && p.drugCount >= 18) drugWarning = ' <span class="badge badge-danger">ครบ 18 ครั้งแล้ว!</span>';
-            if(p.drug === 'pembrolizumab' && p.drugCount >= 35) drugWarning = ' <span class="badge badge-danger">ครบ 35 ครั้งแล้ว!</span>';
+            if(p.drug === 'olaparib' && Number(p.drugCount) >= 18) drugWarning = ' <span class="badge badge-danger">ครบ 18 ครั้งแล้ว!</span>';
+            if(p.drug === 'pembrolizumab' && Number(p.drugCount) >= 35) drugWarning = ' <span class="badge badge-danger">ครบ 35 ครั้งแล้ว!</span>';
 
             tbody.innerHTML += `
                 <tr>
@@ -596,7 +649,7 @@
     function deletePatient(index) {
         if(confirm('ต้องการลบข้อมูลผู้ป่วยรายนี้ใช่หรือไม่?')) {
             patients.splice(index, 1);
-            localStorage.setItem('patients_data', JSON.stringify(patients));
+            pushDataToCloud();
             renderPatientTable();
         }
     }
@@ -623,7 +676,7 @@
         patients[index].nextAppoint = document.getElementById('editNextAppoint').value;
         patients[index].expDate = document.getElementById('editExpDate').value;
 
-        localStorage.setItem('patients_data', JSON.stringify(patients));
+        pushDataToCloud();
         closeEditModal();
         renderPatientTable();
         alert('อัปเดตข้อมูลสำเร็จ! ✨');
@@ -653,13 +706,16 @@
         for(let day = 1; day <= daysInMonth; day++) {
             let dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             let dayEvents = patients.filter(p => p.nextAppoint === dateStr);
+            let dayCustomEvents = calendarEvents.filter(e => e.date === dateStr);
 
-            let eventsHtml = dayEvents.map(p => `<div class="cal-event" title="${p.name}">นัด: ${p.name}</div>`).join('');
+            let eventsHtml = dayEvents.map(p => `<div class="cal-event" title="นัด: ${p.name}">นัด: ${p.name}</div>`).join('');
+            let customHtml = dayCustomEvents.map((e, idx) => `<div class="cal-custom-event" title="${e.title}" onclick="deleteCalendarEvent('${e.date}', ${idx}, event)">📌 ${e.title}</div>`).join('');
 
             grid.innerHTML += `
-                <div class="cal-cell">
+                <div class="cal-cell" onclick="openCalendarModalForDate('${dateStr}')">
                     <div class="cal-day-num">${day}</div>
                     ${eventsHtml}
+                    ${customHtml}
                 </div>
             `;
         }
@@ -670,54 +726,45 @@
         renderCalendar();
     }
 
-    function addCustomField() {
-        const fieldName = document.getElementById('newFieldName').value.trim();
-        if(fieldName) {
-            customFields.push(fieldName);
-            localStorage.setItem('custom_fields', JSON.stringify(customFields));
-            document.getElementById('newFieldName').value = '';
-            renderCustomFields();
-            alert('เพิ่มฟิลด์สำเร็จ!');
-        }
+    function openCalendarModal() {
+        document.getElementById('calendarModal').style.display = 'flex';
     }
 
-    function renderCustomFields() {
-        const list = document.getElementById('customFieldsList');
-        list.innerHTML = '';
-        customFields.forEach(f => {
-            list.innerHTML += `<li>${f}</li>`;
-        });
+    function openCalendarModalForDate(dateStr) {
+        document.getElementById('calEventDate').value = dateStr;
+        document.getElementById('calendarModal').style.display = 'flex';
     }
 
-    function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(patients));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "patient_data_backup.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
+    function closeCalendarModal() {
+        document.getElementById('calendarModal').style.display = 'none';
+        document.getElementById('calendarForm').reset();
     }
 
-    function importDataTrigger() {
-        document.getElementById('importFile').click();
+    function saveCalendarEvent(e) {
+        e.preventDefault();
+        const date = document.getElementById('calEventDate').value;
+        const title = document.getElementById('calEventTitle').value;
+
+        calendarEvents.push({ date, title });
+        pushDataToCloud();
+        closeCalendarModal();
+        renderCalendar();
+        alert('บันทึกข้อมูลในปฏิทินสำเร็จ! 📌');
     }
 
-    function importData(event) {
-        const file = event.target.files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    patients = JSON.parse(e.target.result);
-                    localStorage.setItem('patients_data', JSON.stringify(patients));
-                    alert('นำเข้าข้อมูลสำเร็จ!');
-                    renderPatientTable();
-                } catch(err) {
-                    alert('ไฟล์ข้อมูลไม่ถูกต้อง');
+    function deleteCalendarEvent(date, index, event) {
+        event.stopPropagation();
+        if(confirm('ต้องการลบรายการนี้ออกจากปฏิทินใช่หรือไม่?')) {
+            let count = 0;
+            calendarEvents = calendarEvents.filter(e => {
+                if(e.date === date) {
+                    if(count === index) { count++; return false; }
+                    count++;
                 }
-            };
-            reader.readAsText(file);
+                return true;
+            });
+            pushDataToCloud();
+            renderCalendar();
         }
     }
 </script>
