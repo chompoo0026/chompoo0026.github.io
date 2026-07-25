@@ -1,876 +1,726 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบติดตามข้อมูลผู้ป่วย 🌸</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg: #FDF6F0;
-    --card: #FFFFFF;
-    --pink: #F6A6B2;
-    --pink-dark: #E8899A;
-    --mint: #A6D8D4;
-    --mint-dark: #7EC0BB;
-    --lavender: #B9A6E0;
-    --lavender-dark: #9C84CE;
-    --text: #4A4458;
-    --text-soft: #8B839A;
-    --warn: #FF9B6A;
-    --danger: #E85D5D;
-    --line: #F0E4E8;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Sarabun', sans-serif;
-    background:
-      radial-gradient(circle at 8% 8%, rgba(246,166,178,0.18), transparent 40%),
-      radial-gradient(circle at 95% 12%, rgba(166,216,212,0.22), transparent 40%),
-      radial-gradient(circle at 90% 90%, rgba(185,166,224,0.16), transparent 40%),
-      var(--bg);
-    color:var(--text);
-    min-height:100vh;
-    padding-bottom:60px;
-  }
-  h1,h2,h3,.display{font-family:'Prompt', sans-serif;}
-  .wrap{max-width:1100px; margin:0 auto; padding:20px 16px 60px;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามข้อมูลผู้ป่วยและยาเคมีบำบัด 🪻</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #9b9bff;
+            --secondary-color: #e8e8ff;
+            --accent-color: #6c5ce7;
+            --text-color: #4a4a6a;
+            --bg-color: #f5f6fa;
+            --card-bg: #ffffff;
+            --warning-bg: #fff3cd;
+            --warning-text: #856404;
+            --danger-bg: #f8d7da;
+            --danger-text: #721c24;
+        }
 
-  /* header */
-  header.top{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:18px 22px; background:linear-gradient(120deg, var(--pink), var(--lavender));
-    border-radius:24px; color:white; box-shadow:0 10px 30px -12px rgba(185,166,224,0.55);
-    margin-bottom:22px; flex-wrap:wrap;
-  }
-  header.top .brand{display:flex; align-items:center; gap:12px;}
-  header.top .brand .blob{
-    width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.25);
-    display:flex; align-items:center; justify-content:center; font-size:26px;
-    border:2px solid rgba(255,255,255,0.5);
-  }
-  header.top h1{margin:0; font-size:20px; font-weight:600;}
-  header.top p{margin:2px 0 0; font-size:13px; opacity:0.92;}
-  #clockNow{font-size:12px; background:rgba(255,255,255,0.22); padding:6px 12px; border-radius:999px;}
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
 
-  /* nav */
-  nav.tabs{
-    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px;
-  }
-  nav.tabs button{
-    border:none; cursor:pointer; padding:11px 18px; border-radius:16px;
-    background:white; color:var(--text); font-family:'Prompt',sans-serif; font-weight:500; font-size:14px;
-    box-shadow:0 4px 14px -8px rgba(74,68,88,0.25); transition:transform .15s ease, background .15s ease, color .15s ease;
-    display:flex; align-items:center; gap:8px;
-  }
-  nav.tabs button:hover{transform:translateY(-2px);}
-  nav.tabs button.active{
-    background:linear-gradient(120deg, var(--pink-dark), var(--lavender-dark)); color:white;
-  }
-  nav.tabs button .count{
-    background:rgba(0,0,0,0.08); border-radius:999px; padding:1px 8px; font-size:11px;
-  }
-  nav.tabs button.active .count{background:rgba(255,255,255,0.28);}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-  .card{
-    background:var(--card); border-radius:22px; padding:22px; margin-bottom:18px;
-    box-shadow:0 8px 26px -18px rgba(74,68,88,0.35); border:1px solid var(--line);
-  }
-  .card h2{margin:0 0 4px; font-size:18px; display:flex; align-items:center; gap:8px;}
-  .subnote{color:var(--text-soft); font-size:13px; margin:0 0 16px;}
+        header {
+            text-align: center;
+            background: linear-gradient(135deg, #a29bfe, #74b9ff);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+            margin-bottom: 20px;
+            color: white;
+        }
 
-  /* form */
-  label{font-size:13px; font-weight:600; color:var(--text-soft); display:block; margin-bottom:6px;}
-  .field{margin-bottom:16px;}
-  input[type=text], input[type=date], input[type=number], select, textarea{
-    width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid var(--line);
-    font-family:'Sarabun',sans-serif; font-size:14px; color:var(--text); background:#FFFCFB;
-  }
-  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--pink);}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
-  @media (max-width:700px){.grid2,.grid3{grid-template-columns:1fr;}}
+        header h1 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 26px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-  .chip-group{display:flex; flex-wrap:wrap; gap:8px;}
-  .chip{
-    border:1.5px solid var(--line); background:#FFFCFB; padding:8px 14px; border-radius:999px;
-    cursor:pointer; font-size:13px; color:var(--text); transition:all .15s ease; user-select:none;
-  }
-  .chip:hover{border-color:var(--pink);}
-  .chip.selected{background:linear-gradient(120deg, var(--pink), var(--lavender)); color:white; border-color:transparent; font-weight:600;}
+        header p {
+            margin: 5px 0 0;
+            color: #f0f0f5;
+            font-size: 14px;
+        }
 
-  .btn{
-    border:none; cursor:pointer; padding:12px 22px; border-radius:14px; font-family:'Prompt',sans-serif;
-    font-weight:600; font-size:14px; background:linear-gradient(120deg, var(--pink-dark), var(--lavender-dark));
-    color:white; box-shadow:0 6px 18px -8px rgba(232,137,154,0.6);
-  }
-  .btn.secondary{background:#F3EEF7; color:var(--text); box-shadow:none;}
-  .btn.small{padding:7px 14px; font-size:13px; border-radius:10px;}
-  .btn.ghost{background:transparent; color:var(--pink-dark); box-shadow:none; border:1.5px solid var(--pink);}
-  .btn:disabled{opacity:.5; cursor:not-allowed;}
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
 
-  table{width:100%; border-collapse:collapse; font-size:13.5px;}
-  th{text-align:left; color:var(--text-soft); font-weight:600; padding:10px 8px; border-bottom:2px solid var(--line); white-space:nowrap;}
-  td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
-  tr.expiring{background:#FFF3EC;}
-  tr.expired{background:#FDE7E7;}
-  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600;}
-  .badge.ok{background:#E4F6F1; color:#2E9E7F;}
-  .badge.warn{background:#FFE9D9; color:#C4682B;}
-  .badge.danger{background:#FBDCDC; color:#C23A3A;}
-  .badge.info{background:#EFE7FB; color:#7857BF;}
+        button {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            transition: 0.2s;
+        }
 
-  .empty{text-align:center; color:var(--text-soft); padding:30px 10px; font-size:14px;}
-  .empty .em{font-size:34px; display:block; margin-bottom:8px;}
+        button:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
 
-  /* calendar */
-  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
-  .cal-head .title{font-family:'Prompt',sans-serif; font-weight:600; font-size:17px;}
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-  .cal-dow{text-align:center; font-size:12px; color:var(--text-soft); font-weight:600; padding-bottom:4px;}
-  .cal-cell{
-    min-height:78px; border-radius:12px; border:1.5px solid var(--line); padding:6px; cursor:pointer;
-    background:#FFFCFB; transition:border-color .15s ease; position:relative;
-  }
-  .cal-cell:hover{border-color:var(--pink);}
-  .cal-cell.today{border-color:var(--mint-dark); background:#F1FBFA;}
-  .cal-cell.other-month{opacity:.35;}
-  .cal-cell .dnum{font-size:12px; font-weight:600;}
-  .cal-cell .evt{
-    font-size:10.5px; background:var(--lavender); color:white; border-radius:6px; padding:1px 5px;
-    margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .cal-cell .evt.expiry{background:var(--warn);}
+        .section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: none;
+        }
 
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(74,68,88,0.45); display:flex; align-items:center; justify-content:center;
-    z-index:50; padding:16px;
-  }
-  .modal{
-    background:white; border-radius:20px; padding:24px; max-width:480px; width:100%; max-height:88vh; overflow-y:auto;
-    box-shadow:0 20px 60px -20px rgba(0,0,0,0.4);
-  }
-  .modal h3{margin:0 0 14px; display:flex; align-items:center; gap:8px;}
-  .modal .close-row{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+        .section.active {
+            display: block;
+        }
 
-  .appt-item{
-    display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:10px;
-    background:#F8F5FB; margin-bottom:6px; font-size:13px;
-  }
-  .appt-item .del{color:var(--danger); cursor:pointer; font-size:12px; font-weight:600;}
+        h2 {
+            color: var(--accent-color);
+            font-size: 20px;
+            margin-top: 0;
+            border-bottom: 2px dashed var(--secondary-color);
+            padding-bottom: 8px;
+        }
 
-  .toast{
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--text); color:white;
-    padding:12px 22px; border-radius:14px; font-size:14px; z-index:100; box-shadow:0 10px 30px -10px rgba(0,0,0,0.4);
-    display:flex; align-items:center; gap:8px;
-  }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
 
-  .drug-btn-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
-  @media (max-width:700px){.drug-btn-grid{grid-template-columns:repeat(2,1fr);}}
-  .drug-btn{
-    border:1.5px solid var(--line); background:#FFFCFB; border-radius:16px; padding:14px 10px; cursor:pointer;
-    text-align:center; font-family:'Prompt',sans-serif; font-weight:600; font-size:13px; color:var(--text);
-    transition:all .15s ease;
-  }
-  .drug-btn:hover{border-color:var(--mint-dark); transform:translateY(-2px);}
-  .drug-btn .n{display:block; font-size:20px; margin-bottom:4px;}
-  .drug-btn .cnt{display:block; font-size:11px; color:var(--text-soft); margin-top:3px; font-weight:400;}
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
 
-  .settings-list{display:flex; flex-direction:column; gap:8px;}
-  .settings-item{display:flex; justify-content:space-between; align-items:center; background:#F8F5FB; border-radius:12px; padding:10px 14px; font-size:13.5px;}
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+        }
 
-  .footnote{font-size:12px; color:var(--text-soft); text-align:center; margin-top:30px; line-height:1.7;}
-  .flower{position:absolute; font-size:14px; opacity:0.5;}
-  .search-row{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
-  .search-row input{flex:1; min-width:180px;}
-</style>
+        input, select {
+            font-family: 'Prompt', sans-serif;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(108, 92, 231, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+        }
+
+        .alert-row {
+            background-color: var(--warning-bg) !important;
+            color: var(--warning-text);
+            font-weight: 500;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-warning {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .badge-danger {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            background-color: #f1f1f5;
+            color: #555;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* Calendar Styles */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .cal-header {
+            font-weight: bold;
+            text-align: center;
+            background: var(--secondary-color);
+            color: var(--accent-color);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .cal-cell {
+            background: #fff;
+            border: 1px solid #eee;
+            min-height: 80px;
+            padding: 5px;
+            border-radius: 6px;
+            font-size: 12px;
+            position: relative;
+        }
+        .cal-day-num {
+            font-weight: bold;
+            color: #888;
+        }
+        .cal-event {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 2px;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header class="top">
-    <div class="brand">
-      <div class="blob">🌷</div>
-      <div>
-        <h1>ระบบติดตามข้อมูลผู้ป่วยมะเร็งนรีเวช</h1>
-        <p>บันทึกยา • เอกสารสิทธิ • นัดหมาย • แจ้งเตือนล่วงหน้า 🩺</p>
-      </div>
+<div class="container">
+    <header>
+        <h1>🪻 ระบบบันทึกและติดตามผู้ป่วยเคมีบำบัด 🪻</h1>
+        <p>บันทึกข้อมูลผู้ป่วย แจ้งเตือนวันหมดอายุเอกสาร และรอบการให้ยา 🌙</p>
+    </header>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <button onclick="showSection('formSection')">📝 บันทึกข้อมูลผู้ป่วย</button>
+        <button onclick="showSection('patientListSection')">📋 รายชื่อผู้ป่วยทั้งหมด</button>
+        <button onclick="showSection('alertSection')">⚠️ แจ้งเตือนเอกสารใกล้หมดอายุ</button>
+        <button onclick="showSection('drugFilterSection')">💊 แยกรายชื่อตามยา</button>
+        <button onclick="showSection('calendarSection')">📅 ปฏิทินนัดหมาย</button>
+        <button onclick="showSection('settingsSection')">⚙️ ตั้งค่าระบบ/เพิ่มเติมฟิลด์</button>
+        <button onclick="exportData()" style="background-color: #00b894;">💾 สำรองข้อมูล</button>
+        <button onclick="importDataTrigger()" style="background-color: #0984e3;">📂 นำเข้าข้อมูล</button>
+        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
     </div>
-    <div id="clockNow"></div>
-  </header>
 
-  <nav class="tabs" id="tabNav"></nav>
+    <!-- 1. บันทึกข้อมูลผู้ป่วย -->
+    <div id="formSection" class="section active">
+        <h2>📝 บันทึกข้อมูลผู้ป่วยใหม่</h2>
+        <form id="patientForm" onsubmit="savePatient(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล คนไข้:</label>
+                    <input type="text" id="pName" required placeholder="ระบุชื่อ-นามสกุล">
+                </div>
+                <div class="form-group">
+                    <label>HN (รหัสผู้ป่วย):</label>
+                    <input type="text" id="pHN" required placeholder="ระบุ HN">
+                </div>
+                <div class="form-group">
+                    <label>เลขบัตรประจำตัวประชาชน:</label>
+                    <input type="text" id="pIdCard" maxlength="13" placeholder="เลข 13 หลัก">
+                </div>
+                <div class="form-group">
+                    <label>สิทธิการรักษา:</label>
+                    <select id="pRight">
+                        <option value="สิทธิบัตรทอง (UC)">สิทธิบัตรทอง (UC)</option>
+                        <option value="ข้าราชการ/รัฐวิสาหกิจ">ข้าราชการ/รัฐวิสาหกิจ</option>
+                        <option value="ประกันสังคม">ประกันสังคม</option>
+                        <option value="จ่ายเงินเอง/อื่นๆ">จ่ายเงินเอง/อื่นๆ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>โรค:</label>
+                    <select id="pDisease" onchange="checkOtherDisease()">
+                        <option value="CA ovary">CA ovary</option>
+                        <option value="CA Endometrium">CA Endometrium</option>
+                        <option value="CA Cervix">CA Cervix</option>
+                        <option value="CA Vulva">CA Vulva</option>
+                        <option value="GTN">GTN</option>
+                        <option value="CA Vagina">CA Vagina</option>
+                        <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="otherDiseaseGroup" style="display:none;">
+                    <label>ระบุโรคอื่นๆ:</label>
+                    <input type="text" id="pOtherDisease" placeholder="พิมพ์ชื่อโรค...">
+                </div>
+                <div class="form-group">
+                    <label>ยาที่ได้รับ:</label>
+                    <select id="pDrug" onchange="checkDrugType()">
+                        <option value="olaparib">olaparib (ครบ 18 ครั้ง)</option>
+                        <option value="pembrolizumab">pembrolizumab (ครบ 35 ครั้ง)</option>
+                        <option value="etoposide">etoposide</option>
+                        <option value="lenvalizumab">lenvalizumab</option>
+                        <option value="niraparib">niraparib</option>
+                        <option value="bevalizumab-ED">bevalizumab (ED จ.2)</option>
+                        <option value="bevalizumab-OCPA">bevalizumab (แบบ OCPA)</option>
+                        <option value="อื่นๆ">อื่นๆ (พิมพ์ชื่อยาเพิ่ม)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="otherDrugGroup" style="display:none;">
+                    <label>ระบุชื่อยาอื่นๆ:</label>
+                    <input type="text" id="pOtherDrug" placeholder="ชื่อยา...">
+                </div>
+                <div class="form-group" id="drugCountGroup">
+                    <label id="drugCountLabel">จำนวนครั้งที่ได้รับยา:</label>
+                    <input type="number" id="pDrugCount" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>วันที่เบิกเอกสาร:</label>
+                    <input type="date" id="pStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label>วันหมดอายุเอกสาร:</label>
+                    <input type="date" id="pExpDate" required>
+                </div>
+                <div class="form-group">
+                    <label>วันนัดครั้งต่อไป:</label>
+                    <input type="date" id="pNextAppoint">
+                </div>
+            </div>
+            <div id="dynamicFieldsContainer"></div>
+            <button type="submit" style="margin-top: 15px;">💾 บันทึกข้อมูล</button>
+        </form>
+    </div>
 
-  <div id="content"></div>
+    <!-- 2. รายชื่อผู้ป่วยทั้งหมด -->
+    <div id="patientListSection" class="section">
+        <h2>📋 รายชื่อผู้ป่วยทั้งหมด</h2>
+        <div style="overflow-x: auto;">
+            <table id="patientTable">
+                <thead>
+                    <tr>
+                        <th>HN</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>สิทธิการรักษา</th>
+                        <th>โรค</th>
+                        <th>ยาที่ได้รับ</th>
+                        <th>ครั้งที่</th>
+                        <th>วันหมดอายุเอกสาร</th>
+                        <th>วันนัดครั้งต่อไป</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="patientTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
-  <p class="footnote">🌸 ข้อมูลถูกบันทึกแบบใช้ร่วมกัน (shared) — ทุกคนที่เปิดลิงก์นี้จะเห็นและแก้ไขข้อมูลเดียวกัน โปรดใช้ด้วยความระมัดระวังเรื่องความเป็นส่วนตัวของผู้ป่วย 🔒</p>
+    <!-- 3. แจ้งเตือนวันหมดอายุเอกสาร -->
+    <div id="alertSection" class="section">
+        <h2>⚠️ แจ้งเตือนเอกสารใกล้หมดอายุ (ภายใน 1 เดือน)</h2>
+        <p style="font-size:13px; color:#666;">รวบรวมกลุ่มผู้ป่วยที่เอกสารกำลังจะหมดอายุใน 1 เดือนข้างหน้าเพื่อความสะดวกในการติดตาม:</p>
+        <div style="overflow-x: auto;">
+            <table id="alertTable">
+                <thead>
+                    <tr>
+                        <th>HN</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ยาที่ได้รับ</th>
+                        <th>วันหมดอายุเอกสาร</th>
+                        <th>สถานะ</th>
+                    </tr>
+                </thead>
+                <tbody id="alertTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. แยกรายชื่อตามยา -->
+    <div id="drugFilterSection" class="section">
+        <h2>💊 กรองข้อมูลและแยกรายชื่อผู้ป่วยตามยา</h2>
+        <div class="filter-buttons" id="drugFilterButtons">
+            <button class="filter-btn active" onclick="filterByDrug('all')">ทั้งหมด</button>
+            <button class="filter-btn" onclick="filterByDrug('olaparib')">Olaparib</button>
+            <button class="filter-btn" onclick="filterByDrug('pembrolizumab')">Pembrolizumab</button>
+            <button class="filter-btn" onclick="filterByDrug('etoposide')">Etoposide</button>
+            <button class="filter-btn" onclick="filterByDrug('lenvalizumab')">Lenvalizumab</button>
+            <button class="filter-btn" onclick="filterByDrug('niraparib')">Niraparib</button>
+            <button class="filter-btn" onclick="filterByDrug('bevalizumab-ED')">Bevalizumab (ED จ.2)</button>
+            <button class="filter-btn" onclick="filterByDrug('bevalizumab-OCPA')">Bevalizumab (OCPA)</button>
+            <button class="filter-btn" onclick="filterByDrug('อื่นๆ')">ยาอื่นๆ</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>HN</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>โรค</th>
+                        <th>ยาที่ได้รับ</th>
+                        <th>ครั้งที่</th>
+                        <th>วันหมดอายุ</th>
+                    </tr>
+                </thead>
+                <tbody id="filteredDrugTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 5. ปฏิทินนัดหมาย -->
+    <div id="calendarSection" class="section">
+        <h2>📅 ปฏิทินวันนัดผู้ป่วย</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button onclick="changeMonth(-1)">◀ เดือนก่อนหน้า</button>
+            <h3 id="currentMonthYear" style="margin:0; color:var(--accent-color);"></h3>
+            <button onclick="changeMonth(1)">เดือนถัดไป ▶</button>
+        </div>
+        <div class="calendar-container" id="calendarGrid"></div>
+    </div>
+
+    <!-- 6. ตั้งค่าระบบ -->
+    <div id="settingsSection" class="section">
+        <h2>⚙️ ตั้งค่าระบบ / เพิ่มเติมฟิลด์ข้อมูลผู้ป่วย</h2>
+        <p>คุณสามารถเพิ่มฟิลด์ข้อมูลเพิ่มเติมได้ที่นี่ เช่น ระยะของมะเร็ง (Stage) หรือข้อมูลอื่นๆ ที่ต้องการเก็บในอนาคต</p>
+        <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
+            <label>ชื่อฟิลด์ข้อมูลใหม่:</label>
+            <input type="text" id="newFieldName" placeholder="เช่น ระยะของมะเร็ง (Stage)">
+        </div>
+        <button onclick="addCustomField()">+ เพิ่มฟิลด์นี้ในระบบ</button>
+        <h3 style="margin-top: 20px; font-size: 16px;">ฟิลด์เสริมที่มีอยู่:</h3>
+        <ul id="customFieldsList"></ul>
+    </div>
 </div>
 
-<div id="modalRoot"></div>
-<div id="toastRoot"></div>
+<!-- Modal แก้ไขข้อมูลผู้ป่วย -->
+<div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin-top:0; color:var(--accent-color);">แก้ไขข้อมูลผู้ป่วย / วันนัด</h3>
+        <form id="editForm" onsubmit="updatePatient(event)">
+            <input type="hidden" id="editIndex">
+            <div class="form-group"><label>ชื่อ-นามสกุล:</label><input type="text" id="editName" required></div>
+            <div class="form-group"><label>HN:</label><input type="text" id="editHN" required></div>
+            <div class="form-group"><label>วันนัดครั้งต่อไป:</label><input type="date" id="editNextAppoint"></div>
+            <div class="form-group"><label>วันหมดอายุเอกสาร:</label><input type="date" id="editExpDate"></div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button type="submit">บันทึกการแก้ไข</button>
+                <button type="button" onclick="closeEditModal()" style="background-color: #ccc;">ยกเลิก</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
-/* ============ CONSTANTS ============ */
-const DISEASES = ['CA ovary','CA Endometrium','CA Cervix','CA Vulva','GTN','CA Vagina','อื่นๆ'];
-const RIGHTS = ['สิทธิบัตรทอง (UC)','ประกันสังคม','ข้าราชการ/รัฐวิสาหกิจ','ชำระเงินเอง','อื่นๆ'];
-const DRUGS = [
-  {key:'Olaparib', emoji:'💊', max:18},
-  {key:'Pembrolizumab', emoji:'🎗️', max:35},
-  {key:'Etoposide', emoji:'🧪', max:null},
-  {key:'Lenvalizumab', emoji:'🌿', max:null},
-  {key:'Niraparib', emoji:'✨', max:null},
-  {key:'Bevacizumab', emoji:'🩸', max:null},
-  {key:'อื่นๆ', emoji:'📝', max:null},
-];
-const BEVA_TYPES = ['ED จ.2','OCPA'];
-const EXPIRY_WARN_DAYS = 30;
+    let patients = JSON.parse(localStorage.getItem('patients_data')) || [];
+    let customFields = JSON.parse(localStorage.getItem('custom_fields')) || [];
+    let currentFilterDrug = 'all';
+    let currentDate = new Date();
 
-let DB = { patients: [], appointments: [], customFields: [] };
-let currentTab = 'dashboard';
-let calMonth = new Date().getMonth();
-let calYear = new Date().getFullYear();
-let formSelected = { disease:'', drug:'', rights:'', bevaType:'' };
-
-/* ============ STORAGE HELPERS ============ */
-async function loadDB(){
-  try{
-    const p = await window.storage.get('patients', true);
-    DB.patients = p ? JSON.parse(p.value) : [];
-  }catch(e){ DB.patients = []; }
-  try{
-    const a = await window.storage.get('appointments', true);
-    DB.appointments = a ? JSON.parse(a.value) : [];
-  }catch(e){ DB.appointments = []; }
-  try{
-    const c = await window.storage.get('customFields', true);
-    DB.customFields = c ? JSON.parse(c.value) : [];
-  }catch(e){ DB.customFields = []; }
-}
-async function savePatients(){
-  await window.storage.set('patients', JSON.stringify(DB.patients), true);
-}
-async function saveAppointments(){
-  await window.storage.set('appointments', JSON.stringify(DB.appointments), true);
-}
-async function saveCustomFields(){
-  await window.storage.set('customFields', JSON.stringify(DB.customFields), true);
-}
-
-function toast(msg, emoji='✅'){
-  const root = document.getElementById('toastRoot');
-  root.innerHTML = `<div class="toast">${emoji} ${msg}</div>`;
-  setTimeout(()=>{ root.innerHTML=''; }, 2600);
-}
-
-function uid(){ return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
-function daysBetween(dateStr){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dateStr); d.setHours(0,0,0,0);
-  return Math.round((d - today) / 86400000);
-}
-function fmtDate(dateStr){
-  if(!dateStr) return '-';
-  const d = new Date(dateStr);
-  const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear()+543}`;
-}
-function expiryStatus(dateStr){
-  if(!dateStr) return {cls:'', badge:''};
-  const diff = daysBetween(dateStr);
-  if(diff < 0) return {cls:'expired', badge:'<span class="badge danger">⛔ หมดอายุแล้ว</span>'};
-  if(diff <= EXPIRY_WARN_DAYS) return {cls:'expiring', badge:`<span class="badge warn">⏰ ใกล้หมดอายุ (อีก ${diff} วัน)</span>`};
-  return {cls:'', badge:`<span class="badge ok">ปกติ</span>`};
-}
-
-/* ============ NAV ============ */
-const TABS = [
-  {key:'dashboard', label:'หน้าหลัก', emoji:'🏠'},
-  {key:'form', label:'บันทึกข้อมูลผู้ป่วย', emoji:'📝'},
-  {key:'bydrug', label:'ข้อมูลตามยา', emoji:'💊'},
-  {key:'calendar', label:'ปฏิทินนัดหมาย', emoji:'📅'},
-  {key:'expiry', label:'แจ้งเตือนหมดอายุ', emoji:'🔔'},
-  {key:'settings', label:'ตั้งค่าระบบ', emoji:'⚙️'},
-];
-
-function renderNav(){
-  const nav = document.getElementById('tabNav');
-  nav.innerHTML = TABS.map(t=>{
-    let count = '';
-    if(t.key==='expiry'){
-      const n = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate) <= EXPIRY_WARN_DAYS).length;
-      if(n>0) count = `<span class="count">${n}</span>`;
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        if(sectionId === 'patientListSection') renderPatientTable();
+        if(sectionId === 'alertSection') renderAlertTable();
+        if(sectionId === 'drugFilterSection') filterByDrug(currentFilterDrug);
+        if(sectionId === 'calendarSection') renderCalendar();
+        if(sectionId === 'settingsSection') renderCustomFields();
     }
-    return `<button class="${currentTab===t.key?'active':''}" onclick="switchTab('${t.key}')">${t.emoji} ${t.label} ${count}</button>`;
-  }).join('');
-}
-function switchTab(key){
-  currentTab = key;
-  renderNav();
-  renderContent();
-}
 
-/* ============ DASHBOARD ============ */
-function renderDashboard(){
-  const total = DB.patients.length;
-  const expiringSoon = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate)>=0 && daysBetween(p.docExpireDate)<=EXPIRY_WARN_DAYS).length;
-  const expired = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate)<0).length;
-  const upcomingAppts = DB.appointments.filter(a=> new Date(a.date) >= new Date(new Date().toDateString())).sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,5);
+    function checkOtherDisease() {
+        const val = document.getElementById('pDisease').value;
+        document.getElementById('otherDiseaseGroup').style.display = (val === 'อื่นๆ') ? 'flex' : 'none';
+    }
 
-  let html = `
-  <div class="grid3">
-    <div class="card" style="text-align:center;">
-      <div style="font-size:30px;">👩‍⚕️</div>
-      <h2 style="justify-content:center;">${total}</h2>
-      <p class="subnote">ผู้ป่วยทั้งหมดในระบบ</p>
-    </div>
-    <div class="card" style="text-align:center;">
-      <div style="font-size:30px;">⏰</div>
-      <h2 style="justify-content:center; color:var(--warn);">${expiringSoon}</h2>
-      <p class="subnote">เอกสารใกล้หมดอายุ (≤30 วัน)</p>
-    </div>
-    <div class="card" style="text-align:center;">
-      <div style="font-size:30px;">⛔</div>
-      <h2 style="justify-content:center; color:var(--danger);">${expired}</h2>
-      <p class="subnote">เอกสารหมดอายุแล้ว</p>
-    </div>
-  </div>
+    function checkDrugType() {
+        const val = document.getElementById('pDrug').value;
+        document.getElementById('otherDrugGroup').style.display = (val === 'อื่นๆ') ? 'flex' : 'none';
+    }
 
-  <div class="card">
-    <h2>🎉 ความคืบหน้าการให้ยาที่ครบเกณฑ์ / ใกล้ครบ</h2>
-    <p class="subnote">Olaparib ครบ 18 ครั้ง • Pembrolizumab ครบ 35 ครั้ง</p>
-    ${renderDoseAlerts()}
-  </div>
+    function savePatient(e) {
+        e.preventDefault();
+        const diseaseVal = document.getElementById('pDisease').value;
+        const finalDisease = diseaseVal === 'อื่นๆ' ? document.getElementById('pOtherDisease').value : diseaseVal;
+        
+        let drugVal = document.getElementById('pDrug').value;
+        let finalDrug = drugVal === 'อื่นๆ' ? document.getElementById('pOtherDrug').value : drugVal;
+        let count = parseInt(document.getElementById('pDrugCount').value) || 1;
 
-  <div class="card">
-    <h2>📅 นัดหมายที่ใกล้ถึง</h2>
-    ${upcomingAppts.length ? `<table><thead><tr><th>วันที่</th><th>ผู้ป่วย</th><th>รายละเอียด</th></tr></thead><tbody>
-      ${upcomingAppts.map(a=>`<tr><td>${fmtDate(a.date)}</td><td>${a.patientName}</td><td>${a.note||'-'}</td></tr>`).join('')}
-    </tbody></table>` : `<div class="empty"><span class="em">🗓️</span>ยังไม่มีนัดหมายที่ใกล้ถึง</div>`}
-  </div>
-  `;
-  document.getElementById('content').innerHTML = html;
-}
+        let newPatient = {
+            name: document.getElementById('pName').value,
+            hn: document.getElementById('pHN').value,
+            idCard: document.getElementById('pIdCard').value,
+            right: document.getElementById('pRight').value,
+            disease: finalDisease,
+            drug: finalDrug,
+            drugCount: count,
+            startDate: document.getElementById('pStartDate').value,
+            expDate: document.getElementById('pExpDate').value,
+            nextAppoint: document.getElementById('pNextAppoint').value,
+            customData: {}
+        };
 
-function renderDoseAlerts(){
-  const targets = DB.patients.filter(p => (p.drug==='Olaparib' || p.drug==='Pembrolizumab') && p.doseCount);
-  if(!targets.length) return `<div class="empty"><span class="em">💊</span>ยังไม่มีข้อมูลจำนวนครั้งที่ได้รับยา</div>`;
-  return `<table><thead><tr><th>ผู้ป่วย</th><th>HN</th><th>ยา</th><th>ครั้งที่ได้รับ</th><th>สถานะ</th></tr></thead><tbody>
-    ${targets.map(p=>{
-      const drugInfo = DRUGS.find(d=>d.key===p.drug);
-      const max = drugInfo.max;
-      let status = `<span class="badge info">กำลังรักษา (${p.doseCount}/${max})</span>`;
-      if(p.doseCount >= max) status = `<span class="badge ok">🎉 ครบ ${max} ครั้งแล้ว</span>`;
-      else if(p.doseCount >= max-2) status = `<span class="badge warn">⏰ ใกล้ครบ (เหลือ ${max-p.doseCount} ครั้ง)</span>`;
-      return `<tr><td>${p.name}</td><td>${p.hn}</td><td>${p.drug}</td><td>${p.doseCount}/${max}</td><td>${status}</td></tr>`;
-    }).join('')}
-  </tbody></table>`;
-}
+        patients.push(newPatient);
+        localStorage.setItem('patients_data', JSON.stringify(patients));
+        alert('บันทึกข้อมูลสำเร็จ! 🪻');
+        document.getElementById('patientForm').reset();
+        checkOtherDisease();
+        checkDrugType();
+    }
 
-/* ============ FORM ============ */
-function renderForm(editId){
-  const editing = editId ? DB.patients.find(p=>p.id===editId) : null;
-  if(editing){
-    formSelected = { disease: editing.disease, drug: editing.drug, rights: editing.rights, bevaType: editing.bevaType||'' };
-  } else if(!editId){
-    // keep formSelected as-is only if we're freshly entering tab; reset on explicit new
-  }
+    function renderPatientTable() {
+        const tbody = document.getElementById('patientTableBody');
+        tbody.innerHTML = '';
+        patients.forEach((p, index) => {
+            let drugWarning = '';
+            if(p.drug === 'olaparib' && p.drugCount >= 18) drugWarning = ' <span class="badge badge-danger">ครบ 18 ครั้งแล้ว!</span>';
+            if(p.drug === 'pembrolizumab' && p.drugCount >= 35) drugWarning = ' <span class="badge badge-danger">ครบ 35 ครั้งแล้ว!</span>';
 
-  const customFieldsHtml = DB.customFields.map(cf => `
-    <div class="field">
-      <label>${cf.label}</label>
-      <input type="text" id="cf_${cf.id}" value="${editing && editing.customFields && editing.customFields[cf.id] ? editing.customFields[cf.id] : ''}">
-    </div>
-  `).join('');
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p.hn}</td>
+                    <td>${p.name}</td>
+                    <td>${p.right}</td>
+                    <td>${p.disease}</td>
+                    <td>${p.drug}${drugWarning}</td>
+                    <td>${p.drugCount}</td>
+                    <td>${p.expDate}</td>
+                    <td>${p.nextAppoint || '-'}</td>
+                    <td>
+                        <button onclick="openEditModal(${index})" style="padding:4px 8px; font-size:11px;">แก้ไข</button>
+                        <button onclick="deletePatient(${index})" style="padding:4px 8px; font-size:11px; background-color:#ff6b6b;">ลบ</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
 
-  document.getElementById('content').innerHTML = `
-  <div class="card">
-    <h2>📝 ${editing ? 'แก้ไขข้อมูลผู้ป่วย' : 'บันทึกข้อมูลผู้ป่วยใหม่'}</h2>
-    <p class="subnote">กรอกข้อมูลผู้ป่วยให้ครบถ้วน แล้วกด "บันทึกข้อมูล" ด้านล่างค่ะ</p>
+    function renderAlertTable() {
+        const tbody = document.getElementById('alertTableBody');
+        tbody.innerHTML = '';
+        const today = new Date();
+        const oneMonthLater = new Date();
+        oneMonthLater.setMonth(today.getMonth() + 1);
 
-    <div class="grid2">
-      <div class="field">
-        <label>ชื่อ-นามสกุลผู้ป่วย</label>
-        <input type="text" id="f_name" placeholder="เช่น นางสาว ใจดี มีสุข" value="${editing?editing.name:''}">
-      </div>
-      <div class="field">
-        <label>HN</label>
-        <input type="text" id="f_hn" placeholder="เลข HN" value="${editing?editing.hn:''}">
-      </div>
-    </div>
+        let countAlert = 0;
+        patients.forEach(p => {
+            const exp = new Date(p.expDate);
+            if(exp >= today && exp <= oneMonthLater) {
+                countAlert++;
+                tbody.innerHTML += `
+                    <tr class="alert-row">
+                        <td>${p.hn}</td>
+                        <td>${p.name}</td>
+                        <td>${p.drug}</td>
+                        <td>${p.expDate}</td>
+                        <td><span class="badge badge-warning">ใกล้หมดอายุใน 1 เดือน</span></td>
+                    </tr>
+                `;
+            }
+        });
+        if(countAlert === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#888;">ไม่มีเอกสารที่ใกล้หมดอายุในขณะนี้ 🪻</td></tr>`;
+        }
+    }
 
-    <div class="grid2">
-      <div class="field">
-        <label>เลขบัตรประชาชน</label>
-        <input type="text" id="f_idcard" placeholder="เลขบัตรประชาชน 13 หลัก" value="${editing?editing.idCard:''}" maxlength="13">
-      </div>
-      <div class="field">
-        <label>สิทธิการรักษา</label>
-        <div class="chip-group" id="chipRights">
-          ${RIGHTS.map(r=>`<div class="chip ${formSelected.rights===r?'selected':''}" onclick="selectChip('rights','${r}')">${r}</div>`).join('')}
-        </div>
-        <div id="rightsOtherWrap" style="margin-top:8px; display:${formSelected.rights==='อื่นๆ'?'block':'none'};">
-          <input type="text" id="f_rightsOther" placeholder="ระบุสิทธิการรักษา" value="${editing?editing.rightsOther||'':''}">
-        </div>
-      </div>
-    </div>
+    function filterByDrug(drugName) {
+        currentFilterDrug = drugName;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        event && event.target.classList.add('active');
 
-    <div class="field">
-      <label>โรค</label>
-      <div class="chip-group" id="chipDisease">
-        ${DISEASES.map(d=>`<div class="chip ${formSelected.disease===d?'selected':''}" onclick="selectChip('disease','${d}')">${d}</div>`).join('')}
-      </div>
-      <div id="diseaseOtherWrap" style="margin-top:8px; display:${formSelected.disease==='อื่นๆ'?'block':'none'};">
-        <input type="text" id="f_diseaseOther" placeholder="ระบุโรค" value="${editing?editing.diseaseOther||'':''}">
-      </div>
-    </div>
+        const tbody = document.getElementById('filteredDrugTableBody');
+        tbody.innerHTML = '';
 
-    <div class="field">
-      <label>ยาที่ได้รับ</label>
-      <div class="chip-group" id="chipDrug">
-        ${DRUGS.map(d=>`<div class="chip ${formSelected.drug===d.key?'selected':''}" onclick="selectChip('drug','${d.key}')">${d.emoji} ${d.key}</div>`).join('')}
-      </div>
-      <div id="drugOtherWrap" style="margin-top:8px; display:${formSelected.drug==='อื่นๆ'?'block':'none'};">
-        <input type="text" id="f_drugOther" placeholder="ระบุชื่อยา" value="${editing?editing.drugOther||'':''}">
-      </div>
-      <div id="bevaTypeWrap" style="margin-top:10px; display:${formSelected.drug==='Bevacizumab'?'block':'none'};">
-        <label>รูปแบบการเบิก Bevacizumab</label>
-        <div class="chip-group">
-          ${BEVA_TYPES.map(b=>`<div class="chip ${formSelected.bevaType===b?'selected':''}" onclick="selectChip('bevaType','${b}')">${b}</div>`).join('')}
-        </div>
-      </div>
-      <div id="doseCountWrap" style="margin-top:10px; display:${(formSelected.drug==='Olaparib'||formSelected.drug==='Pembrolizumab')?'block':'none'};">
-        <label>ได้รับยาครั้งที่เท่าไหร่ (${formSelected.drug==='Olaparib'?'เป้าหมาย 18 ครั้ง':formSelected.drug==='Pembrolizumab'?'เป้าหมาย 35 ครั้ง':''})</label>
-        <input type="number" id="f_doseCount" min="0" value="${editing?editing.doseCount||'':''}">
-      </div>
-    </div>
+        let filtered = patients;
+        if(drugName !== 'all') {
+            filtered = patients.filter(p => p.drug === drugName);
+        }
 
-    <div class="grid2">
-      <div class="field">
-        <label>วันที่เบิกเอกสาร</label>
-        <input type="date" id="f_docIssue" value="${editing?editing.docIssueDate||'':''}">
-      </div>
-      <div class="field">
-        <label>วันหมดอายุเอกสาร</label>
-        <input type="date" id="f_docExpire" value="${editing?editing.docExpireDate||'':''}">
-      </div>
-    </div>
+        filtered.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p.hn}</td>
+                    <td>${p.name}</td>
+                    <td>${p.disease}</td>
+                    <td>${p.drug}</td>
+                    <td>${p.drugCount}</td>
+                    <td>${p.expDate}</td>
+                </tr>
+            `;
+        });
+    }
 
-    ${customFieldsHtml}
+    function deletePatient(index) {
+        if(confirm('ต้องการลบข้อมูลผู้ป่วยรายนี้ใช่หรือไม่?')) {
+            patients.splice(index, 1);
+            localStorage.setItem('patients_data', JSON.stringify(patients));
+            renderPatientTable();
+        }
+    }
 
-    <div class="field">
-      <label>หมายเหตุเพิ่มเติม</label>
-      <textarea id="f_notes" rows="2" placeholder="หมายเหตุ (ถ้ามี)">${editing?editing.notes||'':''}</textarea>
-    </div>
+    function openEditModal(index) {
+        const p = patients[index];
+        document.getElementById('editIndex').value = index;
+        document.getElementById('editName').value = p.name;
+        document.getElementById('editHN').value = p.hn;
+        document.getElementById('editNextAppoint').value = p.nextAppoint || '';
+        document.getElementById('editExpDate').value = p.expDate || '';
+        document.getElementById('editModal').style.display = 'flex';
+    }
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn" onclick="saveForm('${editing?editing.id:''}')">💾 บันทึกข้อมูล</button>
-      <button class="btn secondary" onclick="resetForm()">↺ ล้างฟอร์ม</button>
-    </div>
-  </div>
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
 
-  <div class="card">
-    <h2>📋 รายชื่อผู้ป่วยทั้งหมด</h2>
-    <div class="search-row">
-      <input type="text" id="searchBox" placeholder="ค้นหาด้วยชื่อ หรือ HN..." oninput="renderPatientTable()">
-    </div>
-    <div id="patientTableWrap"></div>
-  </div>
-  `;
-  renderPatientTable();
-}
+    function updatePatient(e) {
+        e.preventDefault();
+        const index = document.getElementById('editIndex').value;
+        patients[index].name = document.getElementById('editName').value;
+        patients[index].hn = document.getElementById('editHN').value;
+        patients[index].nextAppoint = document.getElementById('editNextAppoint').value;
+        patients[index].expDate = document.getElementById('editExpDate').value;
 
-function selectChip(field, value){
-  if(formSelected[field] === value){
-    formSelected[field] = '';
-  } else {
-    formSelected[field] = value;
-  }
-  renderForm();
-}
+        localStorage.setItem('patients_data', JSON.stringify(patients));
+        closeEditModal();
+        renderPatientTable();
+        alert('อัปเดตข้อมูลสำเร็จ! ✨');
+    }
 
-function resetForm(){
-  formSelected = { disease:'', drug:'', rights:'', bevaType:'' };
-  renderForm();
-}
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
 
-async function saveForm(editId){
-  const name = document.getElementById('f_name').value.trim();
-  const hn = document.getElementById('f_hn').value.trim();
-  if(!name || !hn){
-    toast('กรุณากรอกชื่อและ HN ให้ครบค่ะ', '⚠️');
-    return;
-  }
-  const customFields = {};
-  DB.customFields.forEach(cf=>{
-    const el = document.getElementById('cf_'+cf.id);
-    if(el) customFields[cf.id] = el.value;
-  });
+        const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year + 543}`;
 
-  const record = {
-    id: editId || uid(),
-    name,
-    hn,
-    idCard: document.getElementById('f_idcard').value.trim(),
-    disease: formSelected.disease,
-    diseaseOther: document.getElementById('f_diseaseOther') ? document.getElementById('f_diseaseOther').value.trim() : '',
-    rights: formSelected.rights,
-    rightsOther: document.getElementById('f_rightsOther') ? document.getElementById('f_rightsOther').value.trim() : '',
-    drug: formSelected.drug,
-    drugOther: document.getElementById('f_drugOther') ? document.getElementById('f_drugOther').value.trim() : '',
-    bevaType: formSelected.bevaType,
-    doseCount: document.getElementById('f_doseCount') ? parseInt(document.getElementById('f_doseCount').value)||0 : 0,
-    docIssueDate: document.getElementById('f_docIssue').value,
-    docExpireDate: document.getElementById('f_docExpire').value,
-    notes: document.getElementById('f_notes').value.trim(),
-    customFields,
-    createdAt: editId ? (DB.patients.find(p=>p.id===editId)||{}).createdAt || new Date().toISOString() : new Date().toISOString(),
-  };
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  if(editId){
-    const idx = DB.patients.findIndex(p=>p.id===editId);
-    DB.patients[idx] = record;
-  } else {
-    DB.patients.push(record);
-  }
-  await savePatients();
-  toast('บันทึกข้อมูลผู้ป่วยเรียบร้อยแล้วค่ะ 🌸');
-  resetForm();
-  renderNav();
-}
+        const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+        daysOfWeek.forEach(d => {
+            grid.innerHTML += `<div class="cal-header">${d}</div>`;
+        });
 
-function renderPatientTable(){
-  const search = (document.getElementById('searchBox')?.value || '').toLowerCase();
-  let list = DB.patients.filter(p => p.name.toLowerCase().includes(search) || p.hn.toLowerCase().includes(search));
-  const wrap = document.getElementById('patientTableWrap');
-  if(!list.length){
-    wrap.innerHTML = `<div class="empty"><span class="em">🌷</span>ยังไม่มีข้อมูลผู้ป่วยค่ะ</div>`;
-    return;
-  }
-  wrap.innerHTML = `<table><thead><tr>
-    <th>ชื่อ</th><th>HN</th><th>โรค</th><th>ยา</th><th>วันหมดอายุเอกสาร</th><th>สถานะ</th><th></th>
-  </tr></thead><tbody>
-    ${list.map(p=>{
-      const st = expiryStatus(p.docExpireDate);
-      return `<tr class="${st.cls}">
-        <td>${p.name}</td>
-        <td>${p.hn}</td>
-        <td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td>
-        <td>${p.drug==='อื่นๆ'?p.drugOther:p.drug}${p.bevaType?' ('+p.bevaType+')':''}</td>
-        <td>${fmtDate(p.docExpireDate)}</td>
-        <td>${st.badge}</td>
-        <td style="white-space:nowrap;">
-          <button class="btn small ghost" onclick="renderForm('${p.id}')">แก้ไข</button>
-          <button class="btn small secondary" onclick="deletePatient('${p.id}')">ลบ</button>
-        </td>
-      </tr>`;
-    }).join('')}
-  </tbody></table>`;
-}
+        for(let i = 0; i < firstDay; i++) {
+            grid.innerHTML += `<div class="cal-cell" style="background:#fafafa;"></div>`;
+        }
 
-async function deletePatient(id){
-  if(!confirm('ยืนยันการลบข้อมูลผู้ป่วยรายนี้หรือไม่คะ?')) return;
-  DB.patients = DB.patients.filter(p=>p.id!==id);
-  await savePatients();
-  toast('ลบข้อมูลแล้วค่ะ', '🗑️');
-  renderPatientTable();
-  renderNav();
-}
+        for(let day = 1; day <= daysInMonth; day++) {
+            let dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let dayEvents = patients.filter(p => p.nextAppoint === dateStr);
 
-/* ============ BY DRUG ============ */
-let selectedDrugFilter = null;
-function renderByDrug(){
-  const otherDrugNames = [...new Set(DB.patients.filter(p=>p.drug==='อื่นๆ' && p.drugOther).map(p=>p.drugOther))];
+            let eventsHtml = dayEvents.map(p => `<div class="cal-event" title="${p.name}">นัด: ${p.name}</div>`).join('');
 
-  let html = `
-  <div class="card">
-    <h2>💊 แยกข้อมูลผู้ป่วยตามยา</h2>
-    <p class="subnote">กดปุ่มยาเพื่อดูรายชื่อผู้ป่วยที่ได้รับยานั้นๆ</p>
-    <div class="drug-btn-grid">
-      ${DRUGS.filter(d=>d.key!=='อื่นๆ').map(d=>{
-        const n = DB.patients.filter(p=>p.drug===d.key).length;
-        return `<div class="drug-btn" onclick="filterByDrug('${d.key}')"><span class="n">${d.emoji}</span>${d.key}<span class="cnt">${n} ราย</span></div>`;
-      }).join('')}
-    </div>
-    ${otherDrugNames.length ? `
-      <p class="subnote" style="margin-top:16px;">ยาอื่นๆ ที่มีการบันทึกเพิ่มเติม:</p>
-      <div class="chip-group">
-        ${otherDrugNames.map(n=>`<div class="chip ${selectedDrugFilter==='OTHER::'+n?'selected':''}" onclick="filterByDrug('OTHER::${n}')">📝 ${n} (${DB.patients.filter(p=>p.drug==='อื่นๆ'&&p.drugOther===n).length})</div>`).join('')}
-      </div>
-    ` : ''}
-  </div>
-  <div class="card" id="drugFilterResult"></div>
-  `;
-  document.getElementById('content').innerHTML = html;
-  renderDrugFilterResult();
-}
-function filterByDrug(key){
-  selectedDrugFilter = selectedDrugFilter === key ? null : key;
-  renderByDrug();
-}
-function renderDrugFilterResult(){
-  const wrap = document.getElementById('drugFilterResult');
-  if(!wrap) return;
-  if(!selectedDrugFilter){
-    wrap.innerHTML = `<div class="empty"><span class="em">👆</span>เลือกยาด้านบนเพื่อดูรายชื่อผู้ป่วย</div>`;
-    return;
-  }
-  let list, title;
-  if(selectedDrugFilter.startsWith('OTHER::')){
-    const name = selectedDrugFilter.replace('OTHER::','');
-    list = DB.patients.filter(p=>p.drug==='อื่นๆ' && p.drugOther===name);
-    title = name;
-  } else {
-    list = DB.patients.filter(p=>p.drug===selectedDrugFilter);
-    title = selectedDrugFilter;
-  }
-  const drugInfo = DRUGS.find(d=>d.key===selectedDrugFilter);
-  wrap.innerHTML = `<h2>${drugInfo?drugInfo.emoji:'📝'} ผู้ป่วยที่ได้รับยา: ${title} (${list.length} ราย)</h2>
-  ${list.length ? `<table><thead><tr><th>ชื่อ</th><th>HN</th><th>โรค</th>${drugInfo&&drugInfo.max?'<th>ครั้งที่</th>':''}${title==='Bevacizumab'?'<th>รูปแบบ</th>':''}<th>วันหมดอายุเอกสาร</th><th>สถานะ</th></tr></thead><tbody>
-    ${list.map(p=>{
-      const st = expiryStatus(p.docExpireDate);
-      return `<tr class="${st.cls}">
-        <td>${p.name}</td><td>${p.hn}</td><td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td>
-        ${drugInfo&&drugInfo.max?`<td>${p.doseCount||0}/${drugInfo.max}</td>`:''}
-        ${title==='Bevacizumab'?`<td>${p.bevaType||'-'}</td>`:''}
-        <td>${fmtDate(p.docExpireDate)}</td><td>${st.badge}</td>
-      </tr>`;
-    }).join('')}
-  </tbody></table>` : `<div class="empty"><span class="em">🌷</span>ยังไม่มีผู้ป่วยที่ได้รับยานี้</div>`}`;
-}
+            grid.innerHTML += `
+                <div class="cal-cell">
+                    <div class="cal-day-num">${day}</div>
+                    ${eventsHtml}
+                </div>
+            `;
+        }
+    }
 
-/* ============ EXPIRY ALERTS (grouped) ============ */
-function renderExpiry(){
-  const soon = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate) <= EXPIRY_WARN_DAYS);
-  const groups = {};
-  soon.forEach(p=>{
-    const key = p.docExpireDate;
-    if(!groups[key]) groups[key] = [];
-    groups[key].push(p);
-  });
-  const sortedDates = Object.keys(groups).sort((a,b)=> new Date(a)-new Date(b));
+    function changeMonth(direction) {
+        currentDate.setMonth(currentDate.getMonth() + direction);
+        renderCalendar();
+    }
 
-  let html = `<div class="card">
-    <h2>🔔 แจ้งเตือนเอกสารใกล้หมดอายุ / หมดอายุแล้ว</h2>
-    <p class="subnote">แสดงผู้ป่วยที่เอกสารจะหมดอายุภายใน ${EXPIRY_WARN_DAYS} วัน จัดกลุ่มตามวันหมดอายุเดียวกัน เพื่อสะดวกในการเตรียมเอกสารพร้อมกัน</p>
-  `;
-  if(!sortedDates.length){
-    html += `<div class="empty"><span class="em">🎉</span>ยังไม่มีเอกสารใกล้หมดอายุค่ะ</div></div>`;
-    document.getElementById('content').innerHTML = html;
-    return;
-  }
-  sortedDates.forEach(date=>{
-    const group = groups[date];
-    const diff = daysBetween(date);
-    const isExpired = diff < 0;
-    html += `
-    <div style="margin-top:16px; border:1.5px solid ${isExpired?'var(--danger)':'var(--warn)'}; border-radius:16px; padding:14px 16px; background:${isExpired?'#FDF0F0':'#FFF6EF'};">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <strong>${isExpired?'⛔ หมดอายุแล้ว':'⏰ ใกล้หมดอายุ'}: ${fmtDate(date)} ${!isExpired?`(อีก ${diff} วัน)`:''}</strong>
-        <span class="badge ${isExpired?'danger':'warn'}">กลุ่มผู้ป่วย ${group.length} ราย</span>
-      </div>
-      <table style="margin-top:10px;"><thead><tr><th>ชื่อ</th><th>HN</th><th>โรค</th><th>ยา</th></tr></thead><tbody>
-        ${group.map(p=>`<tr><td>${p.name}</td><td>${p.hn}</td><td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td><td>${p.drug==='อื่นๆ'?p.drugOther:p.drug}</td></tr>`).join('')}
-      </tbody></table>
-    </div>`;
-  });
-  html += `</div>`;
-  document.getElementById('content').innerHTML = html;
-}
+    function addCustomField() {
+        const fieldName = document.getElementById('newFieldName').value.trim();
+        if(fieldName) {
+            customFields.push(fieldName);
+            localStorage.setItem('custom_fields', JSON.stringify(customFields));
+            document.getElementById('newFieldName').value = '';
+            renderCustomFields();
+            alert('เพิ่มฟิลด์สำเร็จ!');
+        }
+    }
 
-/* ============ CALENDAR ============ */
-function renderCalendar(){
-  const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  const firstDay = new Date(calYear, calMonth, 1);
-  const startWeekday = firstDay.getDay();
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
-  const todayStr = new Date().toDateString();
+    function renderCustomFields() {
+        const list = document.getElementById('customFieldsList');
+        list.innerHTML = '';
+        customFields.forEach(f => {
+            list.innerHTML += `<li>${f}</li>`;
+        });
+    }
 
-  let cells = [];
-  for(let i=startWeekday-1; i>=0; i--){
-    cells.push({day: daysInPrevMonth-i, other:true, date:null});
-  }
-  for(let d=1; d<=daysInMonth; d++){
-    const dateObj = new Date(calYear, calMonth, d);
-    cells.push({day:d, other:false, date: dateObj});
-  }
-  while(cells.length % 7 !== 0){
-    cells.push({day: cells.length - (startWeekday+daysInMonth) + 1, other:true, date:null});
-  }
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(patients));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "patient_data_backup.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
 
-  const dow = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+    function importDataTrigger() {
+        document.getElementById('importFile').click();
+    }
 
-  let html = `
-  <div class="card">
-    <div class="cal-head">
-      <button class="btn ghost small" onclick="changeMonth(-1)">← เดือนก่อน</button>
-      <div class="title">📅 ${monthNames[calMonth]} ${calYear+543}</div>
-      <button class="btn ghost small" onclick="changeMonth(1)">เดือนถัดไป →</button>
-    </div>
-    <div class="cal-grid">
-      ${dow.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
-      ${cells.map(c=>{
-        if(c.other || !c.date) return `<div class="cal-cell other-month"><div class="dnum">${c.day}</div></div>`;
-        const dateISO = c.date.toISOString().slice(0,10);
-        const isToday = c.date.toDateString() === todayStr;
-        const appts = DB.appointments.filter(a=>a.date===dateISO);
-        const expiries = DB.patients.filter(p=>p.docExpireDate===dateISO);
-        return `<div class="cal-cell ${isToday?'today':''}" onclick="openDayModal('${dateISO}')">
-          <div class="dnum">${c.day}</div>
-          ${appts.slice(0,2).map(a=>`<div class="evt">🗓️ ${a.patientName}</div>`).join('')}
-          ${expiries.slice(0,1).map(e=>`<div class="evt expiry">⏰ ${e.name} หมดอายุ</div>`).join('')}
-          ${(appts.length+expiries.length)>3?`<div style="font-size:10px; color:var(--text-soft);">+เพิ่มเติม</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
-  document.getElementById('content').innerHTML = html;
-}
-function changeMonth(delta){
-  calMonth += delta;
-  if(calMonth < 0){ calMonth=11; calYear--; }
-  if(calMonth > 11){ calMonth=0; calYear++; }
-  renderCalendar();
-}
-
-function openDayModal(dateISO){
-  const appts = DB.appointments.filter(a=>a.date===dateISO);
-  const patientOptions = DB.patients.map(p=>`<option value="${p.id}">${p.name} (HN ${p.hn})</option>`).join('');
-  document.getElementById('modalRoot').innerHTML = `
-  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
-    <div class="modal">
-      <h3>📅 นัดหมายวันที่ ${fmtDate(dateISO)}</h3>
-      <div id="apptList">
-        ${appts.length ? appts.map(a=>`
-          <div class="appt-item">
-            <span>👤 ${a.patientName} ${a.note?'— '+a.note:''}</span>
-            <span class="del" onclick="deleteAppt('${a.id}','${dateISO}')">ลบ</span>
-          </div>`).join('') : `<p class="subnote">ยังไม่มีนัดหมายในวันนี้</p>`}
-      </div>
-      <hr style="border:none; border-top:1px solid var(--line); margin:14px 0;">
-      <div class="field">
-        <label>เลือกผู้ป่วย</label>
-        <select id="apptPatient"><option value="">-- เลือกผู้ป่วย --</option>${patientOptions}</select>
-      </div>
-      <div class="field">
-        <label>รายละเอียดนัด</label>
-        <input type="text" id="apptNote" placeholder="เช่น นัดให้ยาครั้งที่ 3">
-      </div>
-      <div class="close-row">
-        <button class="btn secondary" onclick="closeModal()">ปิด</button>
-        <button class="btn" onclick="addAppt('${dateISO}')">➕ เพิ่มนัดหมาย</button>
-      </div>
-    </div>
-  </div>`;
-}
-function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
-
-async function addAppt(dateISO){
-  const patientId = document.getElementById('apptPatient').value;
-  const note = document.getElementById('apptNote').value.trim();
-  if(!patientId){ toast('กรุณาเลือกผู้ป่วยค่ะ','⚠️'); return; }
-  const patient = DB.patients.find(p=>p.id===patientId);
-  DB.appointments.push({ id: uid(), patientId, patientName: patient.name, date: dateISO, note });
-  await saveAppointments();
-  toast('เพิ่มนัดหมายเรียบร้อยค่ะ 🗓️');
-  openDayModal(dateISO);
-  renderCalendar();
-}
-async function deleteAppt(apptId, dateISO){
-  DB.appointments = DB.appointments.filter(a=>a.id!==apptId);
-  await saveAppointments();
-  toast('ลบนัดหมายแล้วค่ะ','🗑️');
-  openDayModal(dateISO);
-  renderCalendar();
-}
-
-/* ============ SETTINGS ============ */
-function renderSettings(){
-  document.getElementById('content').innerHTML = `
-  <div class="card">
-    <h2>⚙️ ตั้งค่าระบบ</h2>
-    <p class="subnote">เพิ่มช่องข้อมูลเพิ่มเติมของผู้ป่วยได้ในอนาคต เช่น ระยะของมะเร็ง, แพทย์เจ้าของไข้ ฯลฯ ช่องที่เพิ่มจะปรากฏในแบบฟอร์มบันทึกข้อมูลผู้ป่วยโดยอัตโนมัติ</p>
-    <div class="grid2">
-      <div class="field">
-        <label>ชื่อช่องข้อมูลใหม่</label>
-        <input type="text" id="newFieldName" placeholder="เช่น ระยะของมะเร็ง (Stage)">
-      </div>
-      <div class="field" style="display:flex; align-items:flex-end;">
-        <button class="btn" onclick="addCustomField()">➕ เพิ่มช่องข้อมูล</button>
-      </div>
-    </div>
-    <div class="settings-list" id="customFieldList"></div>
-  </div>
-
-  <div class="card">
-    <h2>📦 ข้อมูลระบบ</h2>
-    <p class="subnote">จำนวนผู้ป่วยทั้งหมด: <strong>${DB.patients.length}</strong> ราย<br>
-    จำนวนนัดหมายทั้งหมด: <strong>${DB.appointments.length}</strong> รายการ<br>
-    ช่องข้อมูลเพิ่มเติมที่ตั้งค่าไว้: <strong>${DB.customFields.length}</strong> ช่อง</p>
-  </div>
-  `;
-  renderCustomFieldList();
-}
-function renderCustomFieldList(){
-  const wrap = document.getElementById('customFieldList');
-  if(!DB.customFields.length){
-    wrap.innerHTML = `<div class="empty"><span class="em">⚙️</span>ยังไม่มีช่องข้อมูลเพิ่มเติมค่ะ</div>`;
-    return;
-  }
-  wrap.innerHTML = DB.customFields.map(cf=>`
-    <div class="settings-item">
-      <span>🏷️ ${cf.label}</span>
-      <span class="del" style="color:var(--danger); cursor:pointer; font-weight:600;" onclick="removeCustomField('${cf.id}')">ลบ</span>
-    </div>
-  `).join('');
-}
-async function addCustomField(){
-  const val = document.getElementById('newFieldName').value.trim();
-  if(!val){ toast('กรุณากรอกชื่อช่องข้อมูลค่ะ','⚠️'); return; }
-  DB.customFields.push({ id: uid(), label: val });
-  await saveCustomFields();
-  toast('เพิ่มช่องข้อมูลใหม่เรียบร้อยค่ะ ✨');
-  renderSettings();
-}
-async function removeCustomField(id){
-  if(!confirm('ยืนยันลบช่องข้อมูลนี้หรือไม่คะ?')) return;
-  DB.customFields = DB.customFields.filter(cf=>cf.id!==id);
-  await saveCustomFields();
-  toast('ลบช่องข้อมูลแล้วค่ะ','🗑️');
-  renderSettings();
-}
-
-/* ============ ROUTER ============ */
-function renderContent(){
-  if(currentTab==='dashboard') renderDashboard();
-  else if(currentTab==='form') renderForm();
-  else if(currentTab==='bydrug') renderByDrug();
-  else if(currentTab==='calendar') renderCalendar();
-  else if(currentTab==='expiry') renderExpiry();
-  else if(currentTab==='settings') renderSettings();
-}
-
-/* ============ CLOCK ============ */
-function tickClock(){
-  const now = new Date();
-  const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const str = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear()+543} • ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-  const el = document.getElementById('clockNow');
-  if(el) el.textContent = str;
-}
-
-/* ============ INIT ============ */
-async function init(){
-  document.getElementById('content').innerHTML = `<div class="card"><div class="empty"><span class="em">🌸</span>กำลังโหลดข้อมูล...</div></div>`;
-  await loadDB();
-  renderNav();
-  renderContent();
-  tickClock();
-  setInterval(tickClock, 30000);
-}
-init();
+    function importData(event) {
+        const file = event.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    patients = JSON.parse(e.target.result);
+                    localStorage.setItem('patients_data', JSON.stringify(patients));
+                    alert('นำเข้าข้อมูลสำเร็จ!');
+                    renderPatientTable();
+                } catch(err) {
+                    alert('ไฟล์ข้อมูลไม่ถูกต้อง');
+                }
+            };
+            reader.readAsText(file);
+        }
+    }
 </script>
+
 </body>
 </html>
