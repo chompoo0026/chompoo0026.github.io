@@ -26,13 +26,14 @@
             <span class="text-4xl">🩺🌸</span>
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">ระบบติดตามและจัดการข้อมูลผู้ป่วย</h1>
-                <p class="text-sm text-gray-500">ซิงค์ข้อมูลเรียลไทม์ระหว่างคอมพิวเตอร์และมือถือ</p>
+                <p class="text-sm text-gray-500">ซิงค์ข้อมูลตรงกันทุกเครื่องอัตโนมัติผ่าน Cloud</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
             <span id="syncStatus" class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium">⏳ กำลังเชื่อมต่อ...</span>
-            <button onclick="loadCloudData(true)" class="px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl text-xs font-bold transition">🔄 รีเฟรชข้อมูล</button>
+            <button onclick="forceSyncData(true)" class="px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl text-xs font-bold transition">🔄 ซิงค์ข้อมูลด่วน</button>
+            <button onclick="openCloudConfigModal()" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-xs font-bold transition">🔗 ตั้งค่ารหัสซิงค์เครื่องอื่น</button>
         </div>
     </header>
 
@@ -186,14 +187,18 @@
         <!-- 3. TAB: หน้าแจ้งเตือนรวม -->
         <section id="alertTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
             <h2 class="text-xl font-bold text-amber-600 mb-4 flex items-center gap-2"><span>⚠️</span> ศูนย์รวมการแจ้งเตือนสำคัญ</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                    <h3 class="font-bold text-amber-800 text-lg mb-3 flex items-center gap-2"><span>📄</span> เอกสารใกล้หมดอายุใน 1 เดือน</h3>
+                    <h3 class="font-bold text-amber-800 text-base mb-3 flex items-center gap-2"><span>📄</span> เอกสารใกล้หมดอายุใน 1 เดือน</h3>
                     <div id="docAlertList" class="space-y-3"></div>
                 </div>
                 <div class="bg-pink-50 border border-pink-200 rounded-2xl p-5">
-                    <h3 class="font-bold text-pink-800 text-lg mb-3 flex items-center gap-2"><span>💊</span> รอบยาครบกำหนด</h3>
+                    <h3 class="font-bold text-pink-800 text-base mb-3 flex items-center gap-2"><span>💊</span> รอบยาครบกำหนด</h3>
                     <div id="drugAlertList" class="space-y-3"></div>
+                </div>
+                <div class="bg-teal-50 border border-teal-200 rounded-2xl p-5">
+                    <h3 class="font-bold text-teal-800 text-base mb-3 flex items-center gap-2"><span>📌</span> บันทึกปฏิทินที่ถึงกำหนด/เร็วๆนี้</h3>
+                    <div id="calendarAlertList" class="space-y-3"></div>
                 </div>
             </div>
         </section>
@@ -215,10 +220,10 @@
             <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
 
             <div class="mt-8 border-t pt-6">
-                <h3 class="font-bold text-gray-800 mb-3">📌 เพิ่มบันทึกข้อความลงปฏิทิน</h3>
+                <h3 class="font-bold text-gray-800 mb-3">📌 เพิ่มบันทึกข้อความลงปฏิทิน (แจ้งเตือนอัตโนมัติ)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <input type="date" id="calNoteDate" class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-400">
-                    <input type="text" id="calNoteText" placeholder="รายละเอียด..." class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-400">
+                    <input type="text" id="calNoteText" placeholder="รายละเอียดบันทึก..." class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-400">
                     <button onclick="saveCalendarNote()" class="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium transition">บันทึกข้อความ</button>
                 </div>
                 <div id="calendarNotesList" class="mt-4 space-y-2"></div>
@@ -234,7 +239,7 @@
                 <h3 class="font-bold text-indigo-900">➕ เพิ่มลิงก์ใหม่</h3>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">ชื่อหัวข้อลิงก์</label>
-                    <input type="text" id="linkTitleInput" placeholder="เช่น ระบบติดตามผู้ป่วย OPD, ลิงก์ CodePen" class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-400">
+                    <input type="text" id="linkTitleInput" placeholder="เช่น ระบบติดตามผู้ป่วย OPD" class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-400">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">URL (วางลิงก์ที่นี่)</label>
@@ -263,6 +268,32 @@
         </section>
 
     </main>
+
+    <!-- Modal สำหรับตั้งค่าเชื่อมต่อรหัส Cloud (เพื่อให้มือถือและคอมเครื่องอื่นใช้ฐานข้อมูลเดียวกัน) -->
+    <div id="cloudConfigModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2"><span>🔗</span> เชื่อมต่อฐานข้อมูลเครื่องอื่น</h3>
+                <button onclick="closeCloudConfigModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-gray-500">หากต้องการให้มือถือและคอมพิวเตอร์ซิงค์ข้อมูลชุดเดียวกัน ให้คัดลอก "รหัสซิงค์" จากเครื่องหลัก แล้วนำมาวางใส่เครื่องนี้ครับ</p>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">รหัสซิงค์ปัจจุบัน (Cloud Bin ID)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="binIdInputDisplay" readonly class="w-full px-3 py-2 border rounded-xl bg-gray-50 text-xs font-mono outline-none">
+                    <button onclick="copyBinId()" class="px-3 py-2 bg-indigo-100 text-indigo-700 rounded-xl text-xs font-medium hover:bg-indigo-200">คัดลอก</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">วางรหัสซิงค์จากเครื่องอื่น (เพื่อเชื่อมต่อ)</label>
+                <input type="text" id="customBinIdInput" placeholder="วางรหัส Bin ID ที่นี่..." class="w-full px-3 py-2 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeCloudConfigModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl text-xs font-medium">ยกเลิก</button>
+                <button onclick="connectCustomBinId()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700">เชื่อมต่อทันที</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal สำหรับแก้ไขข้อมูลผู้ป่วย -->
     <div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
@@ -294,7 +325,7 @@
         </div>
     </div>
 
-    <!-- Modal สำหรับแสดงรายละเอียดนัดหมายประจำวัน เมื่อกดคลิกที่วันในปฏิทิน -->
+    <!-- Modal สำหรับแสดงรายละเอียดนัดหมายประจำวัน -->
     <div id="dayDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -308,7 +339,7 @@
         </div>
     </div>
 
-    <!-- Script ระบบซิงค์ข้อมูลส่วนตัวอัตโนมัติ -->
+    <!-- Script ระบบซิงค์ข้อมูลและจัดการแอป -->
     <script>
         let binId = localStorage.getItem('hospital_my_bin_id');
         const MASTER_KEY = '$2a$10$w6E1Z5tYnN4T8J8V7u3S2eK1Q3n2X2m1L5k2J2m1L5k2J2m1L5k2J';
@@ -324,6 +355,7 @@
         let todayDate = new Date();
         let currentMonth = todayDate.getMonth();
         let currentYear = todayDate.getFullYear();
+        let syncInterval = null;
 
         window.onload = async function() {
             let savedTheme = localStorage.getItem('hospital_theme');
@@ -334,11 +366,16 @@
             } else {
                 await loadCloudData();
             }
+
+            // ตั้งเวลารีเฟรชซิงค์ข้อมูลอัตโนมัติทุกๆ 5 วินาที เพื่อให้ข้อมูลอัปเดตตรงกันทันทีระหว่างเครื่อง
+            syncInterval = setInterval(() => {
+                loadCloudData(false, true);
+            }, 5000);
         };
 
         async function createPersonalBin() {
             let statusEl = document.getElementById('syncStatus');
-            statusEl.innerText = "🛠️ กำลังสร้างฐานข้อมูลส่วนตัว...";
+            statusEl.innerText = "🛠️ กำลังสร้างคลาวด์ส่วนตัว...";
             try {
                 let response = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
@@ -354,7 +391,7 @@
                     binId = result.metadata.id;
                     localStorage.setItem('hospital_my_bin_id', binId);
                     statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "☁️ เชื่อมต่อฐานข้อมูลสำเร็จ";
+                    statusEl.innerText = "☁️ ซิงค์คลาวด์อัตโนมัติสำเร็จ";
                 }
             } catch(e) {
                 statusEl.innerText = "⚠️ ใช้โหมดออฟไลน์";
@@ -363,13 +400,15 @@
             renderPatients();
         }
 
-        async function loadCloudData(isManual = false) {
+        async function loadCloudData(isManual = false, isBackground = false) {
             let statusEl = document.getElementById('syncStatus');
-            statusEl.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium";
-            statusEl.innerText = "⏳ กำลังซิงค์ข้อมูล...";
+            if(!isBackground) {
+                statusEl.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium";
+                statusEl.innerText = "⏳ กำลังซิงค์ข้อมูล...";
+            }
 
             if(!binId) {
-                await createPersonalBin();
+                if(!isBackground) await createPersonalBin();
                 return;
             }
 
@@ -382,18 +421,24 @@
                     if(result.record) {
                         appData = result.record;
                     }
-                    statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "☁️ ซิงค์ข้อมูลล่าสุดแล้ว";
-                } else {
-                    throw new Error("Load failed");
+                    if(!isBackground) {
+                        statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
+                        statusEl.innerText = "☁️ ข้อมูลซิงค์ล่าสุดแล้ว";
+                    }
+                    renderCustomFieldsForm();
+                    renderPatients();
+                    if(document.getElementById('calendarTab') && !document.getElementById('calendarTab').classList.contains('hidden')) {
+                        renderCalendar();
+                        renderCalendarNotes();
+                    }
                 }
             } catch (err) {
-                statusEl.className = "text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-xl font-medium";
-                statusEl.innerText = "⚠️ เชื่อมต่อคลาวด์ไม่สำเร็จ";
+                if(!isBackground) {
+                    statusEl.className = "text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-xl font-medium";
+                    statusEl.innerText = "⚠️ ซิงค์ข้อมูลไม่สำเร็จ";
+                }
             }
 
-            renderCustomFieldsForm();
-            renderPatients();
             if(isManual) alert('รีเฟรชข้อมูลล่าสุดสำเร็จ!');
         }
 
@@ -419,7 +464,7 @@
 
                 if(response.ok) {
                     statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "☁️ บันทึกและซิงค์แล้ว";
+                    statusEl.innerText = "☁️ บันทึกและซิงค์แล้วทุกเครื่อง";
                 } else {
                     throw new Error("Save failed");
                 }
@@ -427,6 +472,40 @@
                 statusEl.className = "text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-xl font-medium";
                 statusEl.innerText = "⚠️ บันทึกไม่สำเร็จ";
             }
+        }
+
+        function forceSyncData(isManual) {
+            loadCloudData(isManual, false);
+        }
+
+        function openCloudConfigModal() {
+            document.getElementById('binIdInputDisplay').value = binId || '';
+            document.getElementById('customBinIdInput').value = '';
+            document.getElementById('cloudConfigModal').classList.remove('hidden');
+            document.getElementById('cloudConfigModal').classList.add('flex');
+        }
+
+        function closeCloudConfigModal() {
+            document.getElementById('cloudConfigModal').classList.add('hidden');
+            document.getElementById('cloudConfigModal').classList.remove('flex');
+        }
+
+        function copyBinId() {
+            let input = document.getElementById('binIdInputDisplay');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            alert('คัดลอกรหัสซิงค์ (Bin ID) เรียบร้อยแล้ว นำไปวางในมือถือหรือคอมเครื่องอื่นได้เลย!');
+        }
+
+        async function connectCustomBinId() {
+            let newBinId = document.getElementById('customBinIdInput').value.trim();
+            if(!newBinId) { alert('กรุณากรอกรหัส Bin ID'); return; }
+            
+            binId = newBinId;
+            localStorage.setItem('hospital_my_bin_id', binId);
+            closeCloudConfigModal();
+            await loadCloudData(true);
+            alert('เชื่อมต่อฐานข้อมูลสำเร็จ ข้อมูลทั้งหมดถูกดึงมาตรงกันแล้ว!');
         }
 
         function changeTheme(theme) {
@@ -449,6 +528,7 @@
             if(tabId === 'calendarTab') { renderCalendar(); renderCalendarNotes(); }
             if(tabId === 'settingTab') { renderCustomFieldsSetting(); }
             if(tabId === 'linkTab') { renderLinks(); }
+            if(tabId === 'alertTab') { renderAlerts(); }
         }
 
         function checkOtherDisease(val) {
@@ -525,6 +605,7 @@
 
         function renderPatients() {
             let tbody = document.getElementById('patientTableBody');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             let filtered = appData.patients;
@@ -633,10 +714,16 @@
         function renderAlerts() {
             let docList = document.getElementById('docAlertList');
             let drugList = document.getElementById('drugAlertList');
+            let calAlertList = document.getElementById('calendarAlertList');
+            if(!docList) return;
+
             docList.innerHTML = '';
             drugList.innerHTML = '';
-            let docCount = 0, drugCountAlert = 0, now = new Date();
+            calAlertList.innerHTML = '';
 
+            let docCount = 0, drugCountAlert = 0, calCountAlert = 0, now = new Date();
+
+            // แจ้งเตือนเอกสารหมดอายุ
             appData.patients.forEach(p => {
                 if(p.docExpireDate) {
                     let exp = new Date(p.docExpireDate);
@@ -645,8 +732,8 @@
                         docCount++;
                         docList.innerHTML += `
                             <div class="bg-white p-3 rounded-xl shadow-sm border border-amber-200 flex justify-between items-center">
-                                <div><p class="font-semibold text-gray-800">${p.name} (HN: ${p.hn})</p><p class="text-xs text-amber-700">หมดอายุ: ${p.docExpireDate} (อีก ${diffDays} วัน)</p></div>
-                                <span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-lg">เตือนเอกสาร</span>
+                                <div><p class="font-semibold text-gray-800 text-sm">${p.name} (HN: ${p.hn})</p><p class="text-xs text-amber-700">หมดอายุ: ${p.docExpireDate} (อีก ${diffDays} วัน)</p></div>
+                                <span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-lg">เอกสาร</span>
                             </div>`;
                     }
                 }
@@ -654,19 +741,38 @@
                     drugCountAlert++;
                     drugList.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-pink-200 flex justify-between items-center">
-                            <div><p class="font-semibold text-gray-800">${p.name} (HN: ${p.hn})</p><p class="text-xs text-pink-700">ยา: ${p.drug} | รอบที่: ${p.drugCount}</p></div>
-                            <span class="text-xs bg-pink-500 text-white px-2 py-1 rounded-lg">ครบรอบยา</span>
+                            <div><p class="font-semibold text-gray-800 text-sm">${p.name} (HN: ${p.hn})</p><p class="text-xs text-pink-700">ยา: ${p.drug} | รอบที่: ${p.drugCount}</p></div>
+                            <span class="text-xs bg-pink-500 text-white px-2 py-1 rounded-lg">รอบยา</span>
                         </div>`;
                 }
             });
-            if(docCount === 0) docList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีเอกสารใกล้หมดอายุในขณะนี้</p>`;
-            if(drugCountAlert === 0) drugList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีผู้ป่วยครบกำหนดรอบยาในขณะนี้</p>`;
+
+            // แจ้งเตือนบันทึกปฏิทินที่ใกล้ถึงกำหนดหรือผ่านมาไม่เกิน 7 วัน
+            appData.calendarNotes.forEach(n => {
+                let noteDate = new Date(n.date);
+                let diffDays = Math.ceil((noteDate - now) / (1000 * 60 * 60 * 24));
+                if(diffDays >= -7 && diffDays <= 14) {
+                    calCountAlert++;
+                    let badgeText = diffDays === 0 ? 'วันนี้' : (diffDays > 0 ? `อีก ${diffDays} วัน` : `ผ่านมา ${Math.abs(diffDays)} วัน`);
+                    calAlertList.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border border-teal-200 flex justify-between items-center">
+                            <div><p class="font-semibold text-gray-800 text-sm">${n.text}</p><p class="text-xs text-teal-700">วันที่: ${n.date} (${badgeText})</p></div>
+                            <span class="text-xs bg-teal-600 text-white px-2 py-1 rounded-lg">ปฏิทิน</span>
+                        </div>`;
+                }
+            });
+
+            if(docCount === 0) docList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีเอกสารใกล้หมดอายุ</p>`;
+            if(drugCountAlert === 0) drugList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีรอบยาครบกำหนด</p>`;
+            if(calCountAlert === 0) calAlertList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีบันทึกปฏิทินในช่วงนี้</p>`;
         }
 
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
         function renderCalendar() {
-            document.getElementById('currentMonthYearLabel').innerText = `${monthNames[currentMonth]} ${currentYear + 543}`;
+            let label = document.getElementById('currentMonthYearLabel');
+            if(!label) return;
+            label.innerText = `${monthNames[currentMonth]} ${currentYear + 543}`;
             let grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
             let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
@@ -681,18 +787,13 @@
                 let formattedDay = String(day).padStart(2, '0');
                 let dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
-                // ดึงรายชื่อผู้ป่วยและบันทึกข้อความที่มีในวันนี้
                 let matchedPatients = appData.patients.filter(p => p.nextAppointment === dateStr);
                 let matchedNotes = appData.calendarNotes.filter(n => n.date === dateStr);
 
                 let tagsHTML = '';
-                
-                // แสดงชื่อผู้ป่วยลงในกล่องวัน (จำกัดแสดงสวยๆ ไม่ให้ล้น)
                 matchedPatients.forEach(p => {
                     tagsHTML += `<div class="bg-teal-100 text-teal-800 text-[10px] px-1.5 py-0.5 rounded font-medium truncate mb-0.5" title="นัด: ${p.name}">🩺 ${p.name}</div>`;
                 });
-
-                // แสดงบันทึกข้อความลงในกล่องวัน
                 matchedNotes.forEach(n => {
                     tagsHTML += `<div class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-medium truncate mb-0.5" title="บันทึก: ${n.text}">📌 ${n.text}</div>`;
                 });
@@ -720,7 +821,6 @@
             renderCalendar();
         }
 
-        // เมื่อกดที่ช่องวันใดวันหนึ่ง จะเปิด Popup แสดงชื่อผู้ป่วยและบันทึกทั้งหมดของวันนั้น
         function openDayDetail(dateStr) {
             let matchedPatients = appData.patients.filter(p => p.nextAppointment === dateStr);
             let matchedNotes = appData.calendarNotes.filter(n => n.date === dateStr);
@@ -746,7 +846,7 @@
 
                 if(matchedNotes.length > 0) {
                     contentDiv.innerHTML += `<h4 class="text-xs font-bold text-purple-800 uppercase tracking-wider mt-4 mb-2">📌 บันทึกข้อความ</h4>`;
-                    matchedNotes.forEach((n, idx) => {
+                    matchedNotes.forEach((n) => {
                         let originalIndex = appData.calendarNotes.indexOf(n);
                         contentDiv.innerHTML += `
                             <div class="bg-purple-50 border border-purple-100 p-3 rounded-xl mb-2 flex justify-between items-center">
@@ -764,7 +864,7 @@
 
         function closeDayDetailModal() {
             document.getElementById('dayDetailModal').classList.add('hidden');
-            document.getElementById('dayDetailModal').classList.remove('flex');
+            document.getElementById('dayDetailModal'].classList.remove('flex');
         }
 
         function saveCalendarNote() {
@@ -777,7 +877,7 @@
             document.getElementById('calNoteText').value = '';
             renderCalendarNotes();
             renderCalendar();
-            alert('บันทึกข้อความสำเร็จ!');
+            alert('บันทึกข้อความและซิงค์แล้ว!');
         }
 
         function renderCalendarNotes() {
@@ -833,7 +933,7 @@
                             <a href="${item.url}" target="_blank" class="text-xs text-indigo-600 hover:underline truncate block max-w-md">${item.url}</a>
                         </div>
                         <div class="flex items-center gap-2 self-end sm:self-center">
-                            <button onclick="copyToClipboard('${item.url}')" class="px-3 py-1 bg-white border border-indigo-200 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 shadow-sm">📋 คัดลอกลิงก์</button>
+                            <button onclick="copyToClipboard('${item.url}')" class="px-3 py-1 bg-white border border-indigo-200 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 shadow-sm">📋 คัดลอก</button>
                             <a href="${item.url}" target="_blank" class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 shadow-sm">🌐 เปิด</a>
                             ${index !== 0 ? `<button onclick="deleteLink(${index})" class="text-red-500 text-xs hover:underline ml-1">ลบ</button>` : ''}
                         </div>
@@ -845,8 +945,6 @@
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 alert('คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว!');
-            }).catch(err => {
-                alert('คัดลอกไม่สำเร็จ: ' + err);
             });
         }
 
@@ -889,7 +987,7 @@
         }
 
         function deleteCustomField(index) {
-            if(confirm('การลบฟิลด์นี้อาจทำให้ข้อมูลช่องดังกล่าวในประวัติผู้ป่วยหายไป ยืนยันการลบ?')) {
+            if(confirm('ยืนยันการลบฟิลด์นี้?')) {
                 appData.customFields.splice(index, 1);
                 saveCloudData();
                 renderCustomFieldsSetting();
