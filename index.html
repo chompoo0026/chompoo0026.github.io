@@ -1,999 +1,876 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบติดตามและจัดการข้อมูลผู้ป่วย (Cloud Sync)</title>
-    <!-- Google Fonts & Tailwind CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { prompt: ['Prompt', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบติดตามข้อมูลผู้ป่วย 🌸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FDF6F0;
+    --card: #FFFFFF;
+    --pink: #F6A6B2;
+    --pink-dark: #E8899A;
+    --mint: #A6D8D4;
+    --mint-dark: #7EC0BB;
+    --lavender: #B9A6E0;
+    --lavender-dark: #9C84CE;
+    --text: #4A4458;
+    --text-soft: #8B839A;
+    --warn: #FF9B6A;
+    --danger: #E85D5D;
+    --line: #F0E4E8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Sarabun', sans-serif;
+    background:
+      radial-gradient(circle at 8% 8%, rgba(246,166,178,0.18), transparent 40%),
+      radial-gradient(circle at 95% 12%, rgba(166,216,212,0.22), transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(185,166,224,0.16), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  h1,h2,h3,.display{font-family:'Prompt', sans-serif;}
+  .wrap{max-width:1100px; margin:0 auto; padding:20px 16px 60px;}
+
+  /* header */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:18px 22px; background:linear-gradient(120deg, var(--pink), var(--lavender));
+    border-radius:24px; color:white; box-shadow:0 10px 30px -12px rgba(185,166,224,0.55);
+    margin-bottom:22px; flex-wrap:wrap;
+  }
+  header.top .brand{display:flex; align-items:center; gap:12px;}
+  header.top .brand .blob{
+    width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.25);
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+    border:2px solid rgba(255,255,255,0.5);
+  }
+  header.top h1{margin:0; font-size:20px; font-weight:600;}
+  header.top p{margin:2px 0 0; font-size:13px; opacity:0.92;}
+  #clockNow{font-size:12px; background:rgba(255,255,255,0.22); padding:6px 12px; border-radius:999px;}
+
+  /* nav */
+  nav.tabs{
+    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px;
+  }
+  nav.tabs button{
+    border:none; cursor:pointer; padding:11px 18px; border-radius:16px;
+    background:white; color:var(--text); font-family:'Prompt',sans-serif; font-weight:500; font-size:14px;
+    box-shadow:0 4px 14px -8px rgba(74,68,88,0.25); transition:transform .15s ease, background .15s ease, color .15s ease;
+    display:flex; align-items:center; gap:8px;
+  }
+  nav.tabs button:hover{transform:translateY(-2px);}
+  nav.tabs button.active{
+    background:linear-gradient(120deg, var(--pink-dark), var(--lavender-dark)); color:white;
+  }
+  nav.tabs button .count{
+    background:rgba(0,0,0,0.08); border-radius:999px; padding:1px 8px; font-size:11px;
+  }
+  nav.tabs button.active .count{background:rgba(255,255,255,0.28);}
+
+  .card{
+    background:var(--card); border-radius:22px; padding:22px; margin-bottom:18px;
+    box-shadow:0 8px 26px -18px rgba(74,68,88,0.35); border:1px solid var(--line);
+  }
+  .card h2{margin:0 0 4px; font-size:18px; display:flex; align-items:center; gap:8px;}
+  .subnote{color:var(--text-soft); font-size:13px; margin:0 0 16px;}
+
+  /* form */
+  label{font-size:13px; font-weight:600; color:var(--text-soft); display:block; margin-bottom:6px;}
+  .field{margin-bottom:16px;}
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid var(--line);
+    font-family:'Sarabun',sans-serif; font-size:14px; color:var(--text); background:#FFFCFB;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--pink);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media (max-width:700px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .chip-group{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    border:1.5px solid var(--line); background:#FFFCFB; padding:8px 14px; border-radius:999px;
+    cursor:pointer; font-size:13px; color:var(--text); transition:all .15s ease; user-select:none;
+  }
+  .chip:hover{border-color:var(--pink);}
+  .chip.selected{background:linear-gradient(120deg, var(--pink), var(--lavender)); color:white; border-color:transparent; font-weight:600;}
+
+  .btn{
+    border:none; cursor:pointer; padding:12px 22px; border-radius:14px; font-family:'Prompt',sans-serif;
+    font-weight:600; font-size:14px; background:linear-gradient(120deg, var(--pink-dark), var(--lavender-dark));
+    color:white; box-shadow:0 6px 18px -8px rgba(232,137,154,0.6);
+  }
+  .btn.secondary{background:#F3EEF7; color:var(--text); box-shadow:none;}
+  .btn.small{padding:7px 14px; font-size:13px; border-radius:10px;}
+  .btn.ghost{background:transparent; color:var(--pink-dark); box-shadow:none; border:1.5px solid var(--pink);}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{text-align:left; color:var(--text-soft); font-weight:600; padding:10px 8px; border-bottom:2px solid var(--line); white-space:nowrap;}
+  td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr.expiring{background:#FFF3EC;}
+  tr.expired{background:#FDE7E7;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600;}
+  .badge.ok{background:#E4F6F1; color:#2E9E7F;}
+  .badge.warn{background:#FFE9D9; color:#C4682B;}
+  .badge.danger{background:#FBDCDC; color:#C23A3A;}
+  .badge.info{background:#EFE7FB; color:#7857BF;}
+
+  .empty{text-align:center; color:var(--text-soft); padding:30px 10px; font-size:14px;}
+  .empty .em{font-size:34px; display:block; margin-bottom:8px;}
+
+  /* calendar */
+  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .cal-head .title{font-family:'Prompt',sans-serif; font-weight:600; font-size:17px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-dow{text-align:center; font-size:12px; color:var(--text-soft); font-weight:600; padding-bottom:4px;}
+  .cal-cell{
+    min-height:78px; border-radius:12px; border:1.5px solid var(--line); padding:6px; cursor:pointer;
+    background:#FFFCFB; transition:border-color .15s ease; position:relative;
+  }
+  .cal-cell:hover{border-color:var(--pink);}
+  .cal-cell.today{border-color:var(--mint-dark); background:#F1FBFA;}
+  .cal-cell.other-month{opacity:.35;}
+  .cal-cell .dnum{font-size:12px; font-weight:600;}
+  .cal-cell .evt{
+    font-size:10.5px; background:var(--lavender); color:white; border-radius:6px; padding:1px 5px;
+    margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .cal-cell .evt.expiry{background:var(--warn);}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(74,68,88,0.45); display:flex; align-items:center; justify-content:center;
+    z-index:50; padding:16px;
+  }
+  .modal{
+    background:white; border-radius:20px; padding:24px; max-width:480px; width:100%; max-height:88vh; overflow-y:auto;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,0.4);
+  }
+  .modal h3{margin:0 0 14px; display:flex; align-items:center; gap:8px;}
+  .modal .close-row{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+
+  .appt-item{
+    display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:10px;
+    background:#F8F5FB; margin-bottom:6px; font-size:13px;
+  }
+  .appt-item .del{color:var(--danger); cursor:pointer; font-size:12px; font-weight:600;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--text); color:white;
+    padding:12px 22px; border-radius:14px; font-size:14px; z-index:100; box-shadow:0 10px 30px -10px rgba(0,0,0,0.4);
+    display:flex; align-items:center; gap:8px;
+  }
+
+  .drug-btn-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  @media (max-width:700px){.drug-btn-grid{grid-template-columns:repeat(2,1fr);}}
+  .drug-btn{
+    border:1.5px solid var(--line); background:#FFFCFB; border-radius:16px; padding:14px 10px; cursor:pointer;
+    text-align:center; font-family:'Prompt',sans-serif; font-weight:600; font-size:13px; color:var(--text);
+    transition:all .15s ease;
+  }
+  .drug-btn:hover{border-color:var(--mint-dark); transform:translateY(-2px);}
+  .drug-btn .n{display:block; font-size:20px; margin-bottom:4px;}
+  .drug-btn .cnt{display:block; font-size:11px; color:var(--text-soft); margin-top:3px; font-weight:400;}
+
+  .settings-list{display:flex; flex-direction:column; gap:8px;}
+  .settings-item{display:flex; justify-content:space-between; align-items:center; background:#F8F5FB; border-radius:12px; padding:10px 14px; font-size:13.5px;}
+
+  .footnote{font-size:12px; color:var(--text-soft); text-align:center; margin-top:30px; line-height:1.7;}
+  .flower{position:absolute; font-size:14px; opacity:0.5;}
+  .search-row{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .search-row input{flex:1; min-width:180px;}
+</style>
 </head>
-<body id="pageBody" class="font-prompt bg-gradient-to-br from-pink-50 to-purple-100 min-h-screen text-gray-700 p-4 md:p-6 transition-colors duration-300">
+<body>
+<div class="wrap">
 
-    <!-- ส่วนหัว (Header) -->
-    <header class="max-w-7xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-6 border border-purple-100 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center space-x-4">
-            <span class="text-4xl">🩺🌸</span>
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">ระบบติดตามและจัดการข้อมูลผู้ป่วย</h1>
-                <p class="text-sm text-gray-500">ซิงค์ข้อมูลตรงกันทุกเครื่องอัตโนมัติผ่าน Cloud</p>
-            </div>
-        </div>
+  <header class="top">
+    <div class="brand">
+      <div class="blob">🌷</div>
+      <div>
+        <h1>ระบบติดตามข้อมูลผู้ป่วยมะเร็งนรีเวช</h1>
+        <p>บันทึกยา • เอกสารสิทธิ • นัดหมาย • แจ้งเตือนล่วงหน้า 🩺</p>
+      </div>
+    </div>
+    <div id="clockNow"></div>
+  </header>
 
-        <div class="flex items-center gap-3 flex-wrap">
-            <span id="syncStatus" class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium">⏳ กำลังเชื่อมต่อ...</span>
-            <button onclick="forceSyncData(true)" class="px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl text-xs font-bold transition">🔄 ซิงค์ข้อมูลด่วน</button>
-            <button onclick="openCloudConfigModal()" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-xs font-bold transition">🔗 ตั้งค่ารหัสซิงค์เครื่องอื่น</button>
-        </div>
-    </header>
+  <nav class="tabs" id="tabNav"></nav>
 
-    <!-- แถบปุ่มเมนูด้านบน -->
-    <nav class="max-w-7xl mx-auto flex flex-wrap gap-2 justify-center mb-6">
-        <button onclick="openTab('formTab')" class="nav-btn px-4 py-2.5 bg-purple-600 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">📋 บันทึกข้อมูล</button>
-        <button onclick="openTab('listTab'); renderPatients();" class="nav-btn px-4 py-2.5 bg-pink-600 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">👥 รายชื่อผู้ป่วยทั้งหมด</button>
-        <button onclick="openTab('alertTab'); renderAlerts();" class="nav-btn px-4 py-2.5 bg-amber-500 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">⚠️ แจ้งเตือนหมดอายุ/รอบยา</button>
-        <button onclick="openTab('calendarTab')" class="nav-btn px-4 py-2.5 bg-teal-600 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">📅 ปฏิทินนัดหมาย</button>
-        <button onclick="openTab('linkTab'); renderLinks();" class="nav-btn px-4 py-2.5 bg-indigo-600 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">🔗 บันทึกลิงก์ระบบ</button>
-        <button onclick="openTab('settingTab')" class="nav-btn px-4 py-2.5 bg-gray-600 text-white rounded-xl shadow hover:opacity-90 transition font-medium text-sm">⚙️ ตั้งค่าระบบ</button>
-    </nav>
+  <div id="content"></div>
 
-    <main class="max-w-7xl mx-auto">
+  <p class="footnote">🌸 ข้อมูลถูกบันทึกแบบใช้ร่วมกัน (shared) — ทุกคนที่เปิดลิงก์นี้จะเห็นและแก้ไขข้อมูลเดียวกัน โปรดใช้ด้วยความระมัดระวังเรื่องความเป็นส่วนตัวของผู้ป่วย 🔒</p>
+</div>
 
-        <!-- 1. TAB: ฟอร์มบันทึกข้อมูลผู้ป่วย -->
-        <section id="formTab" class="tab-content bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <h2 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2"><span>📝</span> เพิ่มข้อมูลผู้ป่วยใหม่</h2>
-            <form id="patientForm" onsubmit="savePatient(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">ชื่อ-นามสกุล คนไข้ *</label>
-                    <input type="text" id="pName" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">HN (Hospital Number) *</label>
-                    <input type="text" id="pHN" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">เลขบัตรประชาชน (13 หลัก)</label>
-                    <input type="text" id="pIdCard" maxlength="13" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">โรค (Diagnosis)</label>
-                    <select id="pDisease" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none" onchange="checkOtherDisease(this.value)">
-                        <option value="CA ovary">CA ovary</option>
-                        <option value="CA Endometrium">CA Endometrium</option>
-                        <option value="CA Cervix">CA Cervix</option>
-                        <option value="CA Vulva">CA Vulva</option>
-                        <option value="GTN">GTN</option>
-                        <option value="CA Vagina">CA Vagina</option>
-                        <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
-                    </select>
-                </div>
-                <div id="otherDiseaseDiv" class="hidden">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">ระบุโรคอื่นๆ</label>
-                    <input type="text" id="pOtherDisease" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+<script>
+/* ============ CONSTANTS ============ */
+const DISEASES = ['CA ovary','CA Endometrium','CA Cervix','CA Vulva','GTN','CA Vagina','อื่นๆ'];
+const RIGHTS = ['สิทธิบัตรทอง (UC)','ประกันสังคม','ข้าราชการ/รัฐวิสาหกิจ','ชำระเงินเอง','อื่นๆ'];
+const DRUGS = [
+  {key:'Olaparib', emoji:'💊', max:18},
+  {key:'Pembrolizumab', emoji:'🎗️', max:35},
+  {key:'Etoposide', emoji:'🧪', max:null},
+  {key:'Lenvalizumab', emoji:'🌿', max:null},
+  {key:'Niraparib', emoji:'✨', max:null},
+  {key:'Bevacizumab', emoji:'🩸', max:null},
+  {key:'อื่นๆ', emoji:'📝', max:null},
+];
+const BEVA_TYPES = ['ED จ.2','OCPA'];
+const EXPIRY_WARN_DAYS = 30;
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">สิทธิการรักษา *</label>
-                    <select id="pRights" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none" onchange="checkOtherRights(this.value)">
-                        <option value="สิทธิหลักประกันสุขภาพถ้วนหน้า (บัตรทอง)">สิทธิหลักประกันสุขภาพถ้วนหน้า (บัตรทอง)</option>
-                        <option value="สิทธิข้าราชการ/รัฐวิสาหกิจ">สิทธิข้าราชการ / รัฐวิสาหกิจ</option>
-                        <option value="สิทธิประกันสังคม">สิทธิประกันสังคม</option>
-                        <option value="สิทธิจ่ายกลาง/เบิกจ่ายตรง">สิทธิจ่ายกลาง / เบิกจ่ายตรง</option>
-                        <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
-                    </select>
-                </div>
-                <div id="otherRightsDiv" class="hidden">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">ระบุสิทธิการรักษาอื่นๆ</label>
-                    <input type="text" id="pOtherRightsInput" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+let DB = { patients: [], appointments: [], customFields: [] };
+let currentTab = 'dashboard';
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+let formSelected = { disease:'', drug:'', rights:'', bevaType:'' };
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">ยาที่ได้รับ *</label>
-                    <select id="pDrug" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none" onchange="checkDrugType(this.value)">
-                        <option value="olaparib">Olaparib</option>
-                        <option value="pembrolizumab">Pembrolizumab</option>
-                        <option value="etoposide">Etoposide</option>
-                        <option value="lenvalizumab">Lenvalizumab</option>
-                        <option value="niraparib">Niraparib</option>
-                        <option value="bevalizumab">Bevalizumab</option>
-                        <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุ)</option>
-                    </select>
-                </div>
+/* ============ STORAGE HELPERS ============ */
+async function loadDB(){
+  try{
+    const p = await window.storage.get('patients', true);
+    DB.patients = p ? JSON.parse(p.value) : [];
+  }catch(e){ DB.patients = []; }
+  try{
+    const a = await window.storage.get('appointments', true);
+    DB.appointments = a ? JSON.parse(a.value) : [];
+  }catch(e){ DB.appointments = []; }
+  try{
+    const c = await window.storage.get('customFields', true);
+    DB.customFields = c ? JSON.parse(c.value) : [];
+  }catch(e){ DB.customFields = []; }
+}
+async function savePatients(){
+  await window.storage.set('patients', JSON.stringify(DB.patients), true);
+}
+async function saveAppointments(){
+  await window.storage.set('appointments', JSON.stringify(DB.appointments), true);
+}
+async function saveCustomFields(){
+  await window.storage.set('customFields', JSON.stringify(DB.customFields), true);
+}
 
-                <div id="bevaSubDiv" class="hidden">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">ชนิด Bevalizumab</label>
-                    <select id="pBevaType" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                        <option value="ED จ.2">ED จ.2</option>
-                        <option value="OCPA">OCPA</option>
-                    </select>
-                </div>
+function toast(msg, emoji='✅'){
+  const root = document.getElementById('toastRoot');
+  root.innerHTML = `<div class="toast">${emoji} ${msg}</div>`;
+  setTimeout(()=>{ root.innerHTML=''; }, 2600);
+}
 
-                <div id="otherDrugDiv" class="hidden">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">พิมพ์ชื่อยาอื่นๆ</label>
-                    <input type="text" id="pOtherDrugInput" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+function uid(){ return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function daysBetween(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function fmtDate(dateStr){
+  if(!dateStr) return '-';
+  const d = new Date(dateStr);
+  const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function expiryStatus(dateStr){
+  if(!dateStr) return {cls:'', badge:''};
+  const diff = daysBetween(dateStr);
+  if(diff < 0) return {cls:'expired', badge:'<span class="badge danger">⛔ หมดอายุแล้ว</span>'};
+  if(diff <= EXPIRY_WARN_DAYS) return {cls:'expiring', badge:`<span class="badge warn">⏰ ใกล้หมดอายุ (อีก ${diff} วัน)</span>`};
+  return {cls:'', badge:`<span class="badge ok">ปกติ</span>`};
+}
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">จำนวนครั้งที่ได้รับยาปัจจุบัน (รอบ)</label>
-                    <input type="number" id="pDrugCount" value="1" min="1" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+/* ============ NAV ============ */
+const TABS = [
+  {key:'dashboard', label:'หน้าหลัก', emoji:'🏠'},
+  {key:'form', label:'บันทึกข้อมูลผู้ป่วย', emoji:'📝'},
+  {key:'bydrug', label:'ข้อมูลตามยา', emoji:'💊'},
+  {key:'calendar', label:'ปฏิทินนัดหมาย', emoji:'📅'},
+  {key:'expiry', label:'แจ้งเตือนหมดอายุ', emoji:'🔔'},
+  {key:'settings', label:'ตั้งค่าระบบ', emoji:'⚙️'},
+];
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">วันที่เบิกเอกสาร</label>
-                    <input type="date" id="pDocStartDate" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">วันหมดอายุเอกสาร</label>
-                    <input type="date" id="pDocExpireDate" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">วันนัดครั้งถัดไป</label>
-                    <input type="date" id="pNextAppointment" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                </div>
+function renderNav(){
+  const nav = document.getElementById('tabNav');
+  nav.innerHTML = TABS.map(t=>{
+    let count = '';
+    if(t.key==='expiry'){
+      const n = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate) <= EXPIRY_WARN_DAYS).length;
+      if(n>0) count = `<span class="count">${n}</span>`;
+    }
+    return `<button class="${currentTab===t.key?'active':''}" onclick="switchTab('${t.key}')">${t.emoji} ${t.label} ${count}</button>`;
+  }).join('');
+}
+function switchTab(key){
+  currentTab = key;
+  renderNav();
+  renderContent();
+}
 
-                <div id="dynamicExtraFieldsContainer" class="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+/* ============ DASHBOARD ============ */
+function renderDashboard(){
+  const total = DB.patients.length;
+  const expiringSoon = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate)>=0 && daysBetween(p.docExpireDate)<=EXPIRY_WARN_DAYS).length;
+  const expired = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate)<0).length;
+  const upcomingAppts = DB.appointments.filter(a=> new Date(a.date) >= new Date(new Date().toDateString())).sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,5);
 
-                <div class="col-span-full mt-4 flex justify-end">
-                    <button type="submit" class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl shadow-lg hover:bg-purple-700 transition flex items-center gap-2"><span>💾</span> บันทึกข้อมูลผู้ป่วย</button>
-                </div>
-            </form>
-        </section>
+  let html = `
+  <div class="grid3">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:30px;">👩‍⚕️</div>
+      <h2 style="justify-content:center;">${total}</h2>
+      <p class="subnote">ผู้ป่วยทั้งหมดในระบบ</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:30px;">⏰</div>
+      <h2 style="justify-content:center; color:var(--warn);">${expiringSoon}</h2>
+      <p class="subnote">เอกสารใกล้หมดอายุ (≤30 วัน)</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:30px;">⛔</div>
+      <h2 style="justify-content:center; color:var(--danger);">${expired}</h2>
+      <p class="subnote">เอกสารหมดอายุแล้ว</p>
+    </div>
+  </div>
 
-        <!-- 2. TAB: รายชื่อผู้ป่วยทั้งหมด -->
-        <section id="listTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-xl font-bold text-purple-800 flex items-center gap-2"><span>👥</span> รายชื่อผู้ป่วยแยกตามกลุ่มยา</h2>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="filterByDrug('all')" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200">ทั้งหมด</button>
-                    <button onclick="filterByDrug('olaparib')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Olaparib</button>
-                    <button onclick="filterByDrug('pembrolizumab')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Pembrolizumab</button>
-                    <button onclick="filterByDrug('etoposide')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Etoposide</button>
-                    <button onclick="filterByDrug('lenvalizumab')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Lenvalizumab</button>
-                    <button onclick="filterByDrug('niraparib')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Niraparib</button>
-                    <button onclick="filterByDrug('bevalizumab')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Bevalizumab</button>
-                    <button onclick="filterByDrug('other')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">ยาอื่นๆ</button>
-                </div>
-            </div>
+  <div class="card">
+    <h2>🎉 ความคืบหน้าการให้ยาที่ครบเกณฑ์ / ใกล้ครบ</h2>
+    <p class="subnote">Olaparib ครบ 18 ครั้ง • Pembrolizumab ครบ 35 ครั้ง</p>
+    ${renderDoseAlerts()}
+  </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-purple-50 text-purple-900 text-sm border-b">
-                            <th class="p-3">ชื่อ-นามสกุล / HN</th>
-                            <th class="p-3">โรค / สิทธิการรักษา</th>
-                            <th class="p-3">ยาที่ได้รับ</th>
-                            <th class="p-3">รอบยา / สถานะ</th>
-                            <th class="p-3">วันหมดอายุเอกสาร</th>
-                            <th class="p-3">วันนัดครั้งถัดไป</th>
-                            <th class="p-3 text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="patientTableBody" class="text-sm divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
-        </section>
+  <div class="card">
+    <h2>📅 นัดหมายที่ใกล้ถึง</h2>
+    ${upcomingAppts.length ? `<table><thead><tr><th>วันที่</th><th>ผู้ป่วย</th><th>รายละเอียด</th></tr></thead><tbody>
+      ${upcomingAppts.map(a=>`<tr><td>${fmtDate(a.date)}</td><td>${a.patientName}</td><td>${a.note||'-'}</td></tr>`).join('')}
+    </tbody></table>` : `<div class="empty"><span class="em">🗓️</span>ยังไม่มีนัดหมายที่ใกล้ถึง</div>`}
+  </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
 
-        <!-- 3. TAB: หน้าแจ้งเตือนรวม -->
-        <section id="alertTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <h2 class="text-xl font-bold text-amber-600 mb-4 flex items-center gap-2"><span>⚠️</span> ศูนย์รวมการแจ้งเตือนสำคัญ</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                    <h3 class="font-bold text-amber-800 text-base mb-3 flex items-center gap-2"><span>📄</span> เอกสารใกล้หมดอายุใน 1 เดือน</h3>
-                    <div id="docAlertList" class="space-y-3"></div>
-                </div>
-                <div class="bg-pink-50 border border-pink-200 rounded-2xl p-5">
-                    <h3 class="font-bold text-pink-800 text-base mb-3 flex items-center gap-2"><span>💊</span> รอบยาครบกำหนด</h3>
-                    <div id="drugAlertList" class="space-y-3"></div>
-                </div>
-                <div class="bg-teal-50 border border-teal-200 rounded-2xl p-5">
-                    <h3 class="font-bold text-teal-800 text-base mb-3 flex items-center gap-2"><span>📌</span> บันทึกปฏิทินที่ถึงกำหนด/เร็วๆนี้</h3>
-                    <div id="calendarAlertList" class="space-y-3"></div>
-                </div>
-            </div>
-        </section>
+function renderDoseAlerts(){
+  const targets = DB.patients.filter(p => (p.drug==='Olaparib' || p.drug==='Pembrolizumab') && p.doseCount);
+  if(!targets.length) return `<div class="empty"><span class="em">💊</span>ยังไม่มีข้อมูลจำนวนครั้งที่ได้รับยา</div>`;
+  return `<table><thead><tr><th>ผู้ป่วย</th><th>HN</th><th>ยา</th><th>ครั้งที่ได้รับ</th><th>สถานะ</th></tr></thead><tbody>
+    ${targets.map(p=>{
+      const drugInfo = DRUGS.find(d=>d.key===p.drug);
+      const max = drugInfo.max;
+      let status = `<span class="badge info">กำลังรักษา (${p.doseCount}/${max})</span>`;
+      if(p.doseCount >= max) status = `<span class="badge ok">🎉 ครบ ${max} ครั้งแล้ว</span>`;
+      else if(p.doseCount >= max-2) status = `<span class="badge warn">⏰ ใกล้ครบ (เหลือ ${max-p.doseCount} ครั้ง)</span>`;
+      return `<tr><td>${p.name}</td><td>${p.hn}</td><td>${p.drug}</td><td>${p.doseCount}/${max}</td><td>${status}</td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
 
-        <!-- 4. TAB: ปฏิทินนัดหมาย -->
-        <section id="calendarTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-purple-800 flex items-center gap-2"><span>📅</span> ปฏิทินนัดหมายผู้ป่วย</h2>
-                <div class="flex items-center gap-2">
-                    <button onclick="changeMonth(-1)" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition">&lt; เดือนก่อน</button>
-                    <span id="currentMonthYearLabel" class="font-bold text-lg text-gray-700 min-w-[150px] text-center"></span>
-                    <button onclick="changeMonth(1)" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition">เดือนถัดไป &gt;</button>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-7 gap-2 text-center font-bold text-gray-500 mb-2">
-                <div class="text-red-500">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-500">ส</div>
-            </div>
-            <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+/* ============ FORM ============ */
+function renderForm(editId){
+  const editing = editId ? DB.patients.find(p=>p.id===editId) : null;
+  if(editing){
+    formSelected = { disease: editing.disease, drug: editing.drug, rights: editing.rights, bevaType: editing.bevaType||'' };
+  } else if(!editId){
+    // keep formSelected as-is only if we're freshly entering tab; reset on explicit new
+  }
 
-            <div class="mt-8 border-t pt-6">
-                <h3 class="font-bold text-gray-800 mb-3">📌 เพิ่มบันทึกข้อความลงปฏิทิน (แจ้งเตือนอัตโนมัติ)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="date" id="calNoteDate" class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-400">
-                    <input type="text" id="calNoteText" placeholder="รายละเอียดบันทึก..." class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-400">
-                    <button onclick="saveCalendarNote()" class="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium transition">บันทึกข้อความ</button>
-                </div>
-                <div id="calendarNotesList" class="mt-4 space-y-2"></div>
-            </div>
-        </section>
+  const customFieldsHtml = DB.customFields.map(cf => `
+    <div class="field">
+      <label>${cf.label}</label>
+      <input type="text" id="cf_${cf.id}" value="${editing && editing.customFields && editing.customFields[cf.id] ? editing.customFields[cf.id] : ''}">
+    </div>
+  `).join('');
 
-        <!-- 5. TAB: บันทึกลิงก์ระบบ -->
-        <section id="linkTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <h2 class="text-xl font-bold text-indigo-800 mb-4 flex items-center gap-2"><span>🔗</span> บันทึกและจัดการลิงก์ระบบสำคัญ</h2>
-            <p class="text-sm text-gray-500 mb-6">ลิงก์ที่บันทึกไว้ที่นี่จะซิงค์ตรงกันทุกเครื่องทันที</p>
-            
-            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 max-w-2xl mb-6 space-y-3">
-                <h3 class="font-bold text-indigo-900">➕ เพิ่มลิงก์ใหม่</h3>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">ชื่อหัวข้อลิงก์</label>
-                    <input type="text" id="linkTitleInput" placeholder="เช่น ระบบติดตามผู้ป่วย OPD" class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">URL (วางลิงก์ที่นี่)</label>
-                    <input type="url" id="linkUrlInput" placeholder="https://..." class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-400">
-                </div>
-                <button onclick="saveNewLink()" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition">บันทึกลิงก์</button>
-            </div>
+  document.getElementById('content').innerHTML = `
+  <div class="card">
+    <h2>📝 ${editing ? 'แก้ไขข้อมูลผู้ป่วย' : 'บันทึกข้อมูลผู้ป่วยใหม่'}</h2>
+    <p class="subnote">กรอกข้อมูลผู้ป่วยให้ครบถ้วน แล้วกด "บันทึกข้อมูล" ด้านล่างค่ะ</p>
 
-            <div class="max-w-3xl">
-                <h3 class="font-bold text-gray-800 mb-3">📋 ลิงก์ที่บันทึกไว้ทั้งหมด</h3>
-                <div id="linksContainer" class="space-y-3"></div>
-            </div>
-        </section>
-
-        <!-- 6. TAB: ตั้งค่าระบบ -->
-        <section id="settingTab" class="tab-content hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100 mb-6">
-            <h2 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2"><span>⚙️</span> ตั้งค่าฟิลด์ข้อมูลเพิ่มเติม</h2>
-            <div class="bg-purple-50 p-4 rounded-xl border border-purple-200 max-w-xl mb-6">
-                <h3 class="font-bold text-purple-900 mb-2">➕ เพิ่มหัวข้อข้อมูลใหม่</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="newFieldName" placeholder="เช่น ระยะของมะเร็ง (Stage)" class="flex-1 px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-purple-400">
-                    <button onclick="addNewField()" class="px-5 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium transition">เพิ่มฟิลด์</button>
-                </div>
-            </div>
-            <div id="customFieldsList" class="space-y-2 max-w-xl"></div>
-        </section>
-
-    </main>
-
-    <!-- Modal สำหรับตั้งค่าเชื่อมต่อรหัส Cloud (เพื่อให้มือถือและคอมเครื่องอื่นใช้ฐานข้อมูลเดียวกัน) -->
-    <div id="cloudConfigModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative space-y-4">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="text-lg font-bold text-indigo-800 flex items-center gap-2"><span>🔗</span> เชื่อมต่อฐานข้อมูลเครื่องอื่น</h3>
-                <button onclick="closeCloudConfigModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            </div>
-            <p class="text-xs text-gray-500">หากต้องการให้มือถือและคอมพิวเตอร์ซิงค์ข้อมูลชุดเดียวกัน ให้คัดลอก "รหัสซิงค์" จากเครื่องหลัก แล้วนำมาวางใส่เครื่องนี้ครับ</p>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">รหัสซิงค์ปัจจุบัน (Cloud Bin ID)</label>
-                <div class="flex gap-2">
-                    <input type="text" id="binIdInputDisplay" readonly class="w-full px-3 py-2 border rounded-xl bg-gray-50 text-xs font-mono outline-none">
-                    <button onclick="copyBinId()" class="px-3 py-2 bg-indigo-100 text-indigo-700 rounded-xl text-xs font-medium hover:bg-indigo-200">คัดลอก</button>
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 mb-1">วางรหัสซิงค์จากเครื่องอื่น (เพื่อเชื่อมต่อ)</label>
-                <input type="text" id="customBinIdInput" placeholder="วางรหัส Bin ID ที่นี่..." class="w-full px-3 py-2 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-400">
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeCloudConfigModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl text-xs font-medium">ยกเลิก</button>
-                <button onclick="connectCustomBinId()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700">เชื่อมต่อทันที</button>
-            </div>
-        </div>
+    <div class="grid2">
+      <div class="field">
+        <label>ชื่อ-นามสกุลผู้ป่วย</label>
+        <input type="text" id="f_name" placeholder="เช่น นางสาว ใจดี มีสุข" value="${editing?editing.name:''}">
+      </div>
+      <div class="field">
+        <label>HN</label>
+        <input type="text" id="f_hn" placeholder="เลข HN" value="${editing?editing.hn:''}">
+      </div>
     </div>
 
-    <!-- Modal สำหรับแก้ไขข้อมูลผู้ป่วย -->
-    <div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
-            <h3 class="text-lg font-bold text-purple-800 mb-4">✏️ แก้ไขข้อมูลผู้ป่วย</h3>
-            <input type="hidden" id="editIndex">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">ชื่อ-นามสกุล</label>
-                    <input type="text" id="editName" class="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">วันนัดครั้งถัดไป</label>
-                    <input type="date" id="editNextApp" class="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">จำนวนครั้งที่ได้รับยาปัจจุบัน</label>
-                    <input type="number" id="editDrugCount" class="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">วันหมดอายุเอกสาร</label>
-                    <input type="date" id="editExpireDate" class="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end gap-2">
-                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition">ยกเลิก</button>
-                <button type="button" onclick="updatePatientData()" class="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition">บันทึกการแก้ไข</button>
-            </div>
+    <div class="grid2">
+      <div class="field">
+        <label>เลขบัตรประชาชน</label>
+        <input type="text" id="f_idcard" placeholder="เลขบัตรประชาชน 13 หลัก" value="${editing?editing.idCard:''}" maxlength="13">
+      </div>
+      <div class="field">
+        <label>สิทธิการรักษา</label>
+        <div class="chip-group" id="chipRights">
+          ${RIGHTS.map(r=>`<div class="chip ${formSelected.rights===r?'selected':''}" onclick="selectChip('rights','${r}')">${r}</div>`).join('')}
         </div>
+        <div id="rightsOtherWrap" style="margin-top:8px; display:${formSelected.rights==='อื่นๆ'?'block':'none'};">
+          <input type="text" id="f_rightsOther" placeholder="ระบุสิทธิการรักษา" value="${editing?editing.rightsOther||'':''}">
+        </div>
+      </div>
     </div>
 
-    <!-- Modal สำหรับแสดงรายละเอียดนัดหมายประจำวัน -->
-    <div id="dayDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 id="modalDateTitle" class="text-lg font-bold text-teal-700 flex items-center gap-2"><span>📅</span> รายละเอียดนัดหมาย</h3>
-                <button onclick="closeDayDetailModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-            </div>
-            <div id="modalDayContent" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
-            <div class="mt-6 flex justify-end">
-                <button onclick="closeDayDetailModal()" class="px-5 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition text-sm font-medium">ปิด</button>
-            </div>
-        </div>
+    <div class="field">
+      <label>โรค</label>
+      <div class="chip-group" id="chipDisease">
+        ${DISEASES.map(d=>`<div class="chip ${formSelected.disease===d?'selected':''}" onclick="selectChip('disease','${d}')">${d}</div>`).join('')}
+      </div>
+      <div id="diseaseOtherWrap" style="margin-top:8px; display:${formSelected.disease==='อื่นๆ'?'block':'none'};">
+        <input type="text" id="f_diseaseOther" placeholder="ระบุโรค" value="${editing?editing.diseaseOther||'':''}">
+      </div>
     </div>
 
-    <!-- Script ระบบซิงค์ข้อมูลและจัดการแอป -->
-    <script>
-        let binId = localStorage.getItem('hospital_my_bin_id');
-        const MASTER_KEY = '$2a$10$w6E1Z5tYnN4T8J8V7u3S2eK1Q3n2X2m1L5k2J2m1L5k2J2m1L5k2J';
-
-        let appData = {
-            patients: [],
-            customFields: [],
-            calendarNotes: [],
-            savedLinks: [{ title: "ลิงก์หน้าเว็บปัจจุบันนี้", url: window.location.href }]
-        };
-
-        let currentFilter = 'all';
-        let todayDate = new Date();
-        let currentMonth = todayDate.getMonth();
-        let currentYear = todayDate.getFullYear();
-        let syncInterval = null;
-
-        window.onload = async function() {
-            let savedTheme = localStorage.getItem('hospital_theme');
-            if(savedTheme) changeTheme(savedTheme);
-
-            if (!binId) {
-                await createPersonalBin();
-            } else {
-                await loadCloudData();
-            }
-
-            // ตั้งเวลารีเฟรชซิงค์ข้อมูลอัตโนมัติทุกๆ 5 วินาที เพื่อให้ข้อมูลอัปเดตตรงกันทันทีระหว่างเครื่อง
-            syncInterval = setInterval(() => {
-                loadCloudData(false, true);
-            }, 5000);
-        };
-
-        async function createPersonalBin() {
-            let statusEl = document.getElementById('syncStatus');
-            statusEl.innerText = "🛠️ กำลังสร้างคลาวด์ส่วนตัว...";
-            try {
-                let response = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY,
-                        'X-Bin-Private': 'false'
-                    },
-                    body: JSON.stringify(appData)
-                });
-                let result = await response.json();
-                if(result.metadata && result.metadata.id) {
-                    binId = result.metadata.id;
-                    localStorage.setItem('hospital_my_bin_id', binId);
-                    statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "☁️ ซิงค์คลาวด์อัตโนมัติสำเร็จ";
-                }
-            } catch(e) {
-                statusEl.innerText = "⚠️ ใช้โหมดออฟไลน์";
-            }
-            renderCustomFieldsForm();
-            renderPatients();
-        }
-
-        async function loadCloudData(isManual = false, isBackground = false) {
-            let statusEl = document.getElementById('syncStatus');
-            if(!isBackground) {
-                statusEl.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium";
-                statusEl.innerText = "⏳ กำลังซิงค์ข้อมูล...";
-            }
-
-            if(!binId) {
-                if(!isBackground) await createPersonalBin();
-                return;
-            }
-
-            try {
-                let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
-                });
-                if(response.ok) {
-                    let result = await response.json();
-                    if(result.record) {
-                        appData = result.record;
-                    }
-                    if(!isBackground) {
-                        statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                        statusEl.innerText = "☁️ ข้อมูลซิงค์ล่าสุดแล้ว";
-                    }
-                    renderCustomFieldsForm();
-                    renderPatients();
-                    if(document.getElementById('calendarTab') && !document.getElementById('calendarTab').classList.contains('hidden')) {
-                        renderCalendar();
-                        renderCalendarNotes();
-                    }
-                }
-            } catch (err) {
-                if(!isBackground) {
-                    statusEl.className = "text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "⚠️ ซิงค์ข้อมูลไม่สำเร็จ";
-                }
-            }
-
-            if(isManual) alert('รีเฟรชข้อมูลล่าสุดสำเร็จ!');
-        }
-
-        async function saveCloudData() {
-            let statusEl = document.getElementById('syncStatus');
-            statusEl.className = "text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-medium";
-            statusEl.innerText = "💾 กำลังบันทึกขึ้นคลาวด์...";
-
-            if(!binId) {
-                await createPersonalBin();
-                return;
-            }
-
-            try {
-                let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY
-                    },
-                    body: JSON.stringify(appData)
-                });
-
-                if(response.ok) {
-                    statusEl.className = "text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl font-medium";
-                    statusEl.innerText = "☁️ บันทึกและซิงค์แล้วทุกเครื่อง";
-                } else {
-                    throw new Error("Save failed");
-                }
-            } catch (err) {
-                statusEl.className = "text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-xl font-medium";
-                statusEl.innerText = "⚠️ บันทึกไม่สำเร็จ";
-            }
-        }
-
-        function forceSyncData(isManual) {
-            loadCloudData(isManual, false);
-        }
-
-        function openCloudConfigModal() {
-            document.getElementById('binIdInputDisplay').value = binId || '';
-            document.getElementById('customBinIdInput').value = '';
-            document.getElementById('cloudConfigModal').classList.remove('hidden');
-            document.getElementById('cloudConfigModal').classList.add('flex');
-        }
-
-        function closeCloudConfigModal() {
-            document.getElementById('cloudConfigModal').classList.add('hidden');
-            document.getElementById('cloudConfigModal').classList.remove('flex');
-        }
-
-        function copyBinId() {
-            let input = document.getElementById('binIdInputDisplay');
-            input.select();
-            navigator.clipboard.writeText(input.value);
-            alert('คัดลอกรหัสซิงค์ (Bin ID) เรียบร้อยแล้ว นำไปวางในมือถือหรือคอมเครื่องอื่นได้เลย!');
-        }
-
-        async function connectCustomBinId() {
-            let newBinId = document.getElementById('customBinIdInput').value.trim();
-            if(!newBinId) { alert('กรุณากรอกรหัส Bin ID'); return; }
-            
-            binId = newBinId;
-            localStorage.setItem('hospital_my_bin_id', binId);
-            closeCloudConfigModal();
-            await loadCloudData(true);
-            alert('เชื่อมต่อฐานข้อมูลสำเร็จ ข้อมูลทั้งหมดถูกดึงมาตรงกันแล้ว!');
-        }
-
-        function changeTheme(theme) {
-            let body = document.getElementById('pageBody');
-            if(theme === 'pink') {
-                body.className = "font-prompt bg-gradient-to-br from-pink-50 to-rose-100 min-h-screen text-gray-700 p-4 md:p-6 transition-colors duration-300";
-            } else if(theme === 'purple') {
-                body.className = "font-prompt bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen text-gray-700 p-4 md:p-6 transition-colors duration-300";
-            } else if(theme === 'teal') {
-                body.className = "font-prompt bg-gradient-to-br from-teal-50 to-emerald-100 min-h-screen text-gray-700 p-4 md:p-6 transition-colors duration-300";
-            } else if(theme === 'amber') {
-                body.className = "font-prompt bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen text-gray-700 p-4 md:p-6 transition-colors duration-300";
-            }
-            localStorage.setItem('hospital_theme', theme);
-        }
-
-        function openTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
-            if(tabId === 'calendarTab') { renderCalendar(); renderCalendarNotes(); }
-            if(tabId === 'settingTab') { renderCustomFieldsSetting(); }
-            if(tabId === 'linkTab') { renderLinks(); }
-            if(tabId === 'alertTab') { renderAlerts(); }
-        }
-
-        function checkOtherDisease(val) {
-            document.getElementById('otherDiseaseDiv').style.display = (val === 'อื่นๆ') ? 'block' : 'none';
-        }
-        function checkOtherRights(val) {
-            document.getElementById('otherRightsDiv').style.display = (val === 'อื่นๆ') ? 'block' : 'none';
-        }
-        function checkDrugType(val) {
-            document.getElementById('bevaSubDiv').style.display = (val === 'bevalizumab') ? 'block' : 'none';
-            document.getElementById('otherDrugDiv').style.display = (val === 'อื่นๆ') ? 'block' : 'none';
-        }
-
-        function renderCustomFieldsForm() {
-            let container = document.getElementById('dynamicExtraFieldsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            appData.customFields.forEach((field, index) => {
-                container.innerHTML += `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">${field}</label>
-                        <input type="text" id="extraField_${index}" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none">
-                    </div>
-                `;
-            });
-        }
-
-        function savePatient(e) {
-            e.preventDefault();
-            let drugVal = document.getElementById('pDrug').value;
-            let finalDrug = drugVal === 'อื่นๆ' ? document.getElementById('pOtherDrugInput').value : drugVal;
-            if(drugVal === 'bevalizumab') {
-                finalDrug += ` (${document.getElementById('pBevaType').value})`;
-            }
-
-            let diseaseVal = document.getElementById('pDisease').value;
-            let finalDisease = diseaseVal === 'อื่นๆ' ? document.getElementById('pOtherDisease').value : diseaseVal;
-
-            let rightsVal = document.getElementById('pRights').value;
-            let finalRights = rightsVal === 'อื่นๆ' ? document.getElementById('pOtherRightsInput').value : rightsVal;
-
-            let extraData = {};
-            appData.customFields.forEach((field, index) => {
-                let elem = document.getElementById(`extraField_${index}`);
-                extraData[field] = elem ? elem.value : '';
-            });
-
-            let newPatient = {
-                name: document.getElementById('pName').value,
-                hn: document.getElementById('pHN').value,
-                idCard: document.getElementById('pIdCard').value,
-                disease: finalDisease,
-                rights: finalRights,
-                drug: finalDrug,
-                drugKey: drugVal.toLowerCase(),
-                drugCount: parseInt(document.getElementById('pDrugCount').value) || 1,
-                docStartDate: document.getElementById('pDocStartDate').value,
-                docExpireDate: document.getElementById('pDocExpireDate').value,
-                nextAppointment: document.getElementById('pNextAppointment').value,
-                extraData: extraData
-            };
-
-            appData.patients.push(newPatient);
-            saveCloudData();
-            alert('บันทึกและซิงค์ข้อมูลผู้ป่วยสำเร็จ!');
-            document.getElementById('patientForm').reset();
-            document.getElementById('otherDiseaseDiv').style.display = 'none';
-            document.getElementById('otherRightsDiv').style.display = 'none';
-            document.getElementById('bevaSubDiv').style.display = 'none';
-            document.getElementById('otherDrugDiv').style.display = 'none';
-            openTab('listTab');
-            renderPatients();
-        }
-
-        function renderPatients() {
-            let tbody = document.getElementById('patientTableBody');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-
-            let filtered = appData.patients;
-            if (currentFilter !== 'all') {
-                if (currentFilter === 'other') {
-                    filtered = appData.patients.filter(p => !['olaparib', 'pembrolizumab', 'etoposide', 'lenvalizumab', 'niraparib', 'bevalizumab'].includes(p.drugKey));
-                } else {
-                    filtered = appData.patients.filter(p => p.drugKey === currentFilter);
-                }
-            }
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400">ไม่พบข้อมูลผู้ป่วยในหมวดหมู่นี้</td></tr>`;
-                return;
-            }
-
-            filtered.forEach((p) => {
-                let actualIndex = appData.patients.indexOf(p);
-                let drugWarning = '';
-                if(p.drugKey === 'olaparib' && p.drugCount >= 18) {
-                    drugWarning = `<span class="bg-pink-100 text-pink-700 px-2 py-0.5 rounded text-xs font-bold block mt-1">✨ ครบ 18 ครั้งแล้ว</span>`;
-                } else if(p.drugKey === 'pembrolizumab' && p.drugCount >= 35) {
-                    drugWarning = `<span class="bg-pink-100 text-pink-700 px-2 py-0.5 rounded text-xs font-bold block mt-1">✨ ครบ 35 ครั้งแล้ว</span>`;
-                }
-
-                let expireBadge = p.docExpireDate || '-';
-                if(p.docExpireDate) {
-                    let expDate = new Date(p.docExpireDate);
-                    let now = new Date();
-                    let diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-                    if(diffDays <= 30 && diffDays >= 0) {
-                        expireBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded-lg font-bold text-xs">⚠️ ${p.docExpireDate} (อีก ${diffDays} วัน)</span>`;
-                    } else if(diffDays < 0) {
-                        expireBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded-lg font-bold text-xs">❌ หมดอายุแล้ว</span>`;
-                    }
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-purple-50/50 border-b">
-                        <td class="p-3">
-                            <div class="font-semibold text-gray-800">${p.name}</div>
-                            <div class="text-xs text-gray-500">HN: ${p.hn}</div>
-                        </td>
-                        <td class="p-3">
-                            <div>${p.disease}</div>
-                            <div class="text-xs text-purple-600 font-medium">${p.rights || '-'}</div>
-                        </td>
-                        <td class="p-3 font-medium text-gray-700">${p.drug}</td>
-                        <td class="p-3">
-                            <span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-semibold">รอบที่ ${p.drugCount}</span>
-                            ${drugWarning}
-                        </td>
-                        <td class="p-3">${expireBadge}</td>
-                        <td class="p-3 font-medium text-teal-600">${p.nextAppointment || '-'}</td>
-                        <td class="p-3 text-center">
-                            <button type="button" onclick="openEditModal(${actualIndex})" class="text-blue-500 hover:text-blue-700 mr-2 text-base" title="แก้ไข">✏️</button>
-                            <button type="button" onclick="deletePatient(${actualIndex})" class="text-red-500 hover:text-red-700 text-base" title="ลบ">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function filterByDrug(drug) {
-            currentFilter = drug;
-            renderPatients();
-        }
-
-        function deletePatient(index) {
-            if(confirm('คุณต้องการลบข้อมูลผู้ป่วยรายนี้ใช่หรือไม่?')) {
-                appData.patients.splice(index, 1);
-                saveCloudData();
-                renderPatients();
-            }
-        }
-
-        function openEditModal(index) {
-            let p = appData.patients[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('editName').value = p.name;
-            document.getElementById('editNextApp').value = p.nextAppointment || '';
-            document.getElementById('editDrugCount').value = p.drugCount || 1;
-            document.getElementById('editExpireDate').value = p.docExpireDate || '';
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editModal').classList.remove('flex');
-        }
-
-        function updatePatientData() {
-            let index = document.getElementById('editIndex').value;
-            appData.patients[index].name = document.getElementById('editName').value;
-            appData.patients[index].nextAppointment = document.getElementById('editNextApp').value;
-            appData.patients[index].drugCount = parseInt(document.getElementById('editDrugCount').value) || 1;
-            appData.patients[index].docExpireDate = document.getElementById('editExpireDate').value;
-            
-            saveCloudData();
-            closeEditModal();
-            renderPatients();
-            alert('อัปเดตและซิงค์ข้อมูลสำเร็จ!');
-        }
-
-        function renderAlerts() {
-            let docList = document.getElementById('docAlertList');
-            let drugList = document.getElementById('drugAlertList');
-            let calAlertList = document.getElementById('calendarAlertList');
-            if(!docList) return;
-
-            docList.innerHTML = '';
-            drugList.innerHTML = '';
-            calAlertList.innerHTML = '';
-
-            let docCount = 0, drugCountAlert = 0, calCountAlert = 0, now = new Date();
-
-            // แจ้งเตือนเอกสารหมดอายุ
-            appData.patients.forEach(p => {
-                if(p.docExpireDate) {
-                    let exp = new Date(p.docExpireDate);
-                    let diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-                    if(diffDays <= 30 && diffDays >= 0) {
-                        docCount++;
-                        docList.innerHTML += `
-                            <div class="bg-white p-3 rounded-xl shadow-sm border border-amber-200 flex justify-between items-center">
-                                <div><p class="font-semibold text-gray-800 text-sm">${p.name} (HN: ${p.hn})</p><p class="text-xs text-amber-700">หมดอายุ: ${p.docExpireDate} (อีก ${diffDays} วัน)</p></div>
-                                <span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-lg">เอกสาร</span>
-                            </div>`;
-                    }
-                }
-                if((p.drugKey === 'olaparib' && p.drugCount >= 18) || (p.drugKey === 'pembrolizumab' && p.drugCount >= 35)) {
-                    drugCountAlert++;
-                    drugList.innerHTML += `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border border-pink-200 flex justify-between items-center">
-                            <div><p class="font-semibold text-gray-800 text-sm">${p.name} (HN: ${p.hn})</p><p class="text-xs text-pink-700">ยา: ${p.drug} | รอบที่: ${p.drugCount}</p></div>
-                            <span class="text-xs bg-pink-500 text-white px-2 py-1 rounded-lg">รอบยา</span>
-                        </div>`;
-                }
-            });
-
-            // แจ้งเตือนบันทึกปฏิทินที่ใกล้ถึงกำหนดหรือผ่านมาไม่เกิน 7 วัน
-            appData.calendarNotes.forEach(n => {
-                let noteDate = new Date(n.date);
-                let diffDays = Math.ceil((noteDate - now) / (1000 * 60 * 60 * 24));
-                if(diffDays >= -7 && diffDays <= 14) {
-                    calCountAlert++;
-                    let badgeText = diffDays === 0 ? 'วันนี้' : (diffDays > 0 ? `อีก ${diffDays} วัน` : `ผ่านมา ${Math.abs(diffDays)} วัน`);
-                    calAlertList.innerHTML += `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border border-teal-200 flex justify-between items-center">
-                            <div><p class="font-semibold text-gray-800 text-sm">${n.text}</p><p class="text-xs text-teal-700">วันที่: ${n.date} (${badgeText})</p></div>
-                            <span class="text-xs bg-teal-600 text-white px-2 py-1 rounded-lg">ปฏิทิน</span>
-                        </div>`;
-                }
-            });
-
-            if(docCount === 0) docList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีเอกสารใกล้หมดอายุ</p>`;
-            if(drugCountAlert === 0) drugList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีรอบยาครบกำหนด</p>`;
-            if(calCountAlert === 0) calAlertList.innerHTML = `<p class="text-sm text-gray-400">ไม่มีบันทึกปฏิทินในช่วงนี้</p>`;
-        }
-
-        const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-
-        function renderCalendar() {
-            let label = document.getElementById('currentMonthYearLabel');
-            if(!label) return;
-            label.innerText = `${monthNames[currentMonth]} ${currentYear + 543}`;
-            let grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-            let totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-            for (let i = 0; i < firstDayIndex; i++) { 
-                grid.innerHTML += `<div class="h-28 bg-gray-50/30 border border-gray-100 rounded-xl"></div>`; 
-            }
-
-            for (let day = 1; day <= totalDays; day++) {
-                let formattedMonth = String(currentMonth + 1).padStart(2, '0');
-                let formattedDay = String(day).padStart(2, '0');
-                let dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
-
-                let matchedPatients = appData.patients.filter(p => p.nextAppointment === dateStr);
-                let matchedNotes = appData.calendarNotes.filter(n => n.date === dateStr);
-
-                let tagsHTML = '';
-                matchedPatients.forEach(p => {
-                    tagsHTML += `<div class="bg-teal-100 text-teal-800 text-[10px] px-1.5 py-0.5 rounded font-medium truncate mb-0.5" title="นัด: ${p.name}">🩺 ${p.name}</div>`;
-                });
-                matchedNotes.forEach(n => {
-                    tagsHTML += `<div class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-medium truncate mb-0.5" title="บันทึก: ${n.text}">📌 ${n.text}</div>`;
-                });
-
-                let hasEventClass = (matchedPatients.length > 0 || matchedNotes.length > 0) ? 'bg-teal-50/50 border-teal-200' : 'bg-white border-purple-100';
-
-                grid.innerHTML += `
-                    <div onclick="openDayDetail('${dateStr}')" class="h-28 border ${hasEventClass} rounded-xl p-1.5 flex flex-col justify-between hover:shadow-md cursor-pointer transition overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-gray-700">${day}</span>
-                            ${(matchedPatients.length + matchedNotes.length) > 0 ? `<span class="text-[9px] bg-teal-600 text-white px-1 rounded-full">${matchedPatients.length + matchedNotes.length}</span>` : ''}
-                        </div>
-                        <div class="flex-1 overflow-y-auto mt-1 space-y-0.5 scrollbar-thin">
-                            ${tagsHTML}
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if(currentMonth > 11) { currentMonth = 0; currentYear++; }
-            if(currentMonth < 0) { currentMonth = 11; currentYear--; }
-            renderCalendar();
-        }
-
-        function openDayDetail(dateStr) {
-            let matchedPatients = appData.patients.filter(p => p.nextAppointment === dateStr);
-            let matchedNotes = appData.calendarNotes.filter(n => n.date === dateStr);
-            
-            document.getElementById('modalDateTitle').innerText = `📅 รายวันที่ ${dateStr}`;
-            let contentDiv = document.getElementById('modalDayContent');
-            contentDiv.innerHTML = '';
-
-            if(matchedPatients.length === 0 && matchedNotes.length === 0) {
-                contentDiv.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">ไม่มีนัดหมายหรือบันทึกในวันนี้</p>`;
-            } else {
-                if(matchedPatients.length > 0) {
-                    contentDiv.innerHTML += `<h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider mb-2">🩺 รายชื่อผู้ป่วยนัดหมาย</h4>`;
-                    matchedPatients.forEach(p => {
-                        contentDiv.innerHTML += `
-                            <div class="bg-teal-50 border border-teal-100 p-3 rounded-xl mb-2">
-                                <p class="font-bold text-gray-800 text-sm">${p.name} <span class="text-xs text-gray-500 font-normal">(HN: ${p.hn})</span></p>
-                                <p class="text-xs text-gray-600 mt-0.5">โรค: ${p.disease} | ยา: ${p.drug} (รอบที่ ${p.drugCount})</p>
-                            </div>
-                        `;
-                    });
-                }
-
-                if(matchedNotes.length > 0) {
-                    contentDiv.innerHTML += `<h4 class="text-xs font-bold text-purple-800 uppercase tracking-wider mt-4 mb-2">📌 บันทึกข้อความ</h4>`;
-                    matchedNotes.forEach((n) => {
-                        let originalIndex = appData.calendarNotes.indexOf(n);
-                        contentDiv.innerHTML += `
-                            <div class="bg-purple-50 border border-purple-100 p-3 rounded-xl mb-2 flex justify-between items-center">
-                                <p class="text-xs text-gray-700">${n.text}</p>
-                                <button onclick="deleteCalendarNote(${originalIndex}); openDayDetail('${dateStr}');" class="text-red-500 text-xs hover:underline ml-2">ลบ</button>
-                            </div>
-                        `;
-                    });
-                }
-            }
-
-            document.getElementById('dayDetailModal').classList.remove('hidden');
-            document.getElementById('dayDetailModal').classList.add('flex');
-        }
-
-        function closeDayDetailModal() {
-            document.getElementById('dayDetailModal').classList.add('hidden');
-            document.getElementById('dayDetailModal'].classList.remove('flex');
-        }
-
-        function saveCalendarNote() {
-            let date = document.getElementById('calNoteDate').value;
-            let text = document.getElementById('calNoteText').value;
-            if(!date || !text) { alert('กรุณากรอกวันที่และรายละเอียดให้ครบถ้วน'); return; }
-            appData.calendarNotes.push({ date, text });
-            saveCloudData();
-            document.getElementById('calNoteDate').value = '';
-            document.getElementById('calNoteText').value = '';
-            renderCalendarNotes();
-            renderCalendar();
-            alert('บันทึกข้อความและซิงค์แล้ว!');
-        }
-
-        function renderCalendarNotes() {
-            let list = document.getElementById('calendarNotesList');
-            if(!list) return;
-            list.innerHTML = '';
-            if(appData.calendarNotes.length === 0) {
-                list.innerHTML = `<p class="text-sm text-gray-400">ยังไม่มีบันทึกข้อความในปฏิทิน</p>`;
-                return;
-            }
-            appData.calendarNotes.forEach((note, index) => {
-                list.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-200 text-sm">
-                        <div><span class="font-bold text-teal-700 mr-2">${note.date}:</span> <span>${note.text}</span></div>
-                        <button onclick="deleteCalendarNote(${index}); renderCalendarNotes(); renderCalendar();" class="text-red-500 text-xs hover:underline">ลบ</button>
-                    </div>
-                `;
-            });
-        }
-
-        function deleteCalendarNote(index) {
-            appData.calendarNotes.splice(index, 1);
-            saveCloudData();
-            renderCalendar();
-        }
-
-        function saveNewLink() {
-            let title = document.getElementById('linkTitleInput').value.trim();
-            let url = document.getElementById('linkUrlInput').value.trim();
-            if(!title || !url) { alert('กรุณากรอกชื่อและ URL ให้ครบถ้วน'); return; }
-            
-            appData.savedLinks.push({ title, url });
-            saveCloudData();
-            document.getElementById('linkTitleInput').value = '';
-            document.getElementById('linkUrlInput').value = '';
-            renderLinks();
-            alert('บันทึกลิงก์สำเร็จ!');
-        }
-
-        function renderLinks() {
-            let container = document.getElementById('linksContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            if(appData.savedLinks.length === 0) {
-                container.innerHTML = `<p class="text-sm text-gray-400">ยังไม่มีการบันทึกลิงก์ระบบ</p>`;
-                return;
-            }
-            appData.savedLinks.forEach((item, index) => {
-                container.innerHTML += `
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 gap-2">
-                        <div class="overflow-hidden">
-                            <p class="font-semibold text-gray-800 text-sm">${item.title}</p>
-                            <a href="${item.url}" target="_blank" class="text-xs text-indigo-600 hover:underline truncate block max-w-md">${item.url}</a>
-                        </div>
-                        <div class="flex items-center gap-2 self-end sm:self-center">
-                            <button onclick="copyToClipboard('${item.url}')" class="px-3 py-1 bg-white border border-indigo-200 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 shadow-sm">📋 คัดลอก</button>
-                            <a href="${item.url}" target="_blank" class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 shadow-sm">🌐 เปิด</a>
-                            ${index !== 0 ? `<button onclick="deleteLink(${index})" class="text-red-500 text-xs hover:underline ml-1">ลบ</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว!');
-            });
-        }
-
-        function deleteLink(index) {
-            if(confirm('ต้องการลบลิงก์นี้ใช่หรือไม่?')) {
-                appData.savedLinks.splice(index, 1);
-                saveCloudData();
-                renderLinks();
-            }
-        }
-
-        function addNewField() {
-            let fieldName = document.getElementById('newFieldName').value.trim();
-            if(!fieldName) { alert('กรุณากรอกชื่อฟิลด์'); return; }
-            if(appData.customFields.includes(fieldName)) { alert('มีชื่อฟิลด์นี้อยู่แล้ว'); return; }
-            appData.customFields.push(fieldName);
-            saveCloudData();
-            document.getElementById('newFieldName').value = '';
-            renderCustomFieldsSetting();
-            renderCustomFieldsForm();
-            alert('เพิ่มฟิลด์สำเร็จ!');
-        }
-
-        function renderCustomFieldsSetting() {
-            let list = document.getElementById('customFieldsList');
-            if(!list) return;
-            list.innerHTML = '';
-            if(appData.customFields.length === 0) {
-                list.innerHTML = `<p class="text-sm text-gray-400">ยังไม่มีการเพิ่มฟิลด์ข้อมูลเพิ่มเติม</p>`;
-                return;
-            }
-            appData.customFields.forEach((field, index) => {
-                list.innerHTML += `
-                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
-                        <span class="font-medium text-gray-700">${field}</span>
-                        <button onclick="deleteCustomField(${index})" class="text-red-500 text-sm hover:underline">ลบฟิลด์</button>
-                    </div>
-                `;
-            });
-        }
-
-        function deleteCustomField(index) {
-            if(confirm('ยืนยันการลบฟิลด์นี้?')) {
-                appData.customFields.splice(index, 1);
-                saveCloudData();
-                renderCustomFieldsSetting();
-                renderCustomFieldsForm();
-            }
-        }
-    </script>
+    <div class="field">
+      <label>ยาที่ได้รับ</label>
+      <div class="chip-group" id="chipDrug">
+        ${DRUGS.map(d=>`<div class="chip ${formSelected.drug===d.key?'selected':''}" onclick="selectChip('drug','${d.key}')">${d.emoji} ${d.key}</div>`).join('')}
+      </div>
+      <div id="drugOtherWrap" style="margin-top:8px; display:${formSelected.drug==='อื่นๆ'?'block':'none'};">
+        <input type="text" id="f_drugOther" placeholder="ระบุชื่อยา" value="${editing?editing.drugOther||'':''}">
+      </div>
+      <div id="bevaTypeWrap" style="margin-top:10px; display:${formSelected.drug==='Bevacizumab'?'block':'none'};">
+        <label>รูปแบบการเบิก Bevacizumab</label>
+        <div class="chip-group">
+          ${BEVA_TYPES.map(b=>`<div class="chip ${formSelected.bevaType===b?'selected':''}" onclick="selectChip('bevaType','${b}')">${b}</div>`).join('')}
+        </div>
+      </div>
+      <div id="doseCountWrap" style="margin-top:10px; display:${(formSelected.drug==='Olaparib'||formSelected.drug==='Pembrolizumab')?'block':'none'};">
+        <label>ได้รับยาครั้งที่เท่าไหร่ (${formSelected.drug==='Olaparib'?'เป้าหมาย 18 ครั้ง':formSelected.drug==='Pembrolizumab'?'เป้าหมาย 35 ครั้ง':''})</label>
+        <input type="number" id="f_doseCount" min="0" value="${editing?editing.doseCount||'':''}">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>วันที่เบิกเอกสาร</label>
+        <input type="date" id="f_docIssue" value="${editing?editing.docIssueDate||'':''}">
+      </div>
+      <div class="field">
+        <label>วันหมดอายุเอกสาร</label>
+        <input type="date" id="f_docExpire" value="${editing?editing.docExpireDate||'':''}">
+      </div>
+    </div>
+
+    ${customFieldsHtml}
+
+    <div class="field">
+      <label>หมายเหตุเพิ่มเติม</label>
+      <textarea id="f_notes" rows="2" placeholder="หมายเหตุ (ถ้ามี)">${editing?editing.notes||'':''}</textarea>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" onclick="saveForm('${editing?editing.id:''}')">💾 บันทึกข้อมูล</button>
+      <button class="btn secondary" onclick="resetForm()">↺ ล้างฟอร์ม</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 รายชื่อผู้ป่วยทั้งหมด</h2>
+    <div class="search-row">
+      <input type="text" id="searchBox" placeholder="ค้นหาด้วยชื่อ หรือ HN..." oninput="renderPatientTable()">
+    </div>
+    <div id="patientTableWrap"></div>
+  </div>
+  `;
+  renderPatientTable();
+}
+
+function selectChip(field, value){
+  if(formSelected[field] === value){
+    formSelected[field] = '';
+  } else {
+    formSelected[field] = value;
+  }
+  renderForm();
+}
+
+function resetForm(){
+  formSelected = { disease:'', drug:'', rights:'', bevaType:'' };
+  renderForm();
+}
+
+async function saveForm(editId){
+  const name = document.getElementById('f_name').value.trim();
+  const hn = document.getElementById('f_hn').value.trim();
+  if(!name || !hn){
+    toast('กรุณากรอกชื่อและ HN ให้ครบค่ะ', '⚠️');
+    return;
+  }
+  const customFields = {};
+  DB.customFields.forEach(cf=>{
+    const el = document.getElementById('cf_'+cf.id);
+    if(el) customFields[cf.id] = el.value;
+  });
+
+  const record = {
+    id: editId || uid(),
+    name,
+    hn,
+    idCard: document.getElementById('f_idcard').value.trim(),
+    disease: formSelected.disease,
+    diseaseOther: document.getElementById('f_diseaseOther') ? document.getElementById('f_diseaseOther').value.trim() : '',
+    rights: formSelected.rights,
+    rightsOther: document.getElementById('f_rightsOther') ? document.getElementById('f_rightsOther').value.trim() : '',
+    drug: formSelected.drug,
+    drugOther: document.getElementById('f_drugOther') ? document.getElementById('f_drugOther').value.trim() : '',
+    bevaType: formSelected.bevaType,
+    doseCount: document.getElementById('f_doseCount') ? parseInt(document.getElementById('f_doseCount').value)||0 : 0,
+    docIssueDate: document.getElementById('f_docIssue').value,
+    docExpireDate: document.getElementById('f_docExpire').value,
+    notes: document.getElementById('f_notes').value.trim(),
+    customFields,
+    createdAt: editId ? (DB.patients.find(p=>p.id===editId)||{}).createdAt || new Date().toISOString() : new Date().toISOString(),
+  };
+
+  if(editId){
+    const idx = DB.patients.findIndex(p=>p.id===editId);
+    DB.patients[idx] = record;
+  } else {
+    DB.patients.push(record);
+  }
+  await savePatients();
+  toast('บันทึกข้อมูลผู้ป่วยเรียบร้อยแล้วค่ะ 🌸');
+  resetForm();
+  renderNav();
+}
+
+function renderPatientTable(){
+  const search = (document.getElementById('searchBox')?.value || '').toLowerCase();
+  let list = DB.patients.filter(p => p.name.toLowerCase().includes(search) || p.hn.toLowerCase().includes(search));
+  const wrap = document.getElementById('patientTableWrap');
+  if(!list.length){
+    wrap.innerHTML = `<div class="empty"><span class="em">🌷</span>ยังไม่มีข้อมูลผู้ป่วยค่ะ</div>`;
+    return;
+  }
+  wrap.innerHTML = `<table><thead><tr>
+    <th>ชื่อ</th><th>HN</th><th>โรค</th><th>ยา</th><th>วันหมดอายุเอกสาร</th><th>สถานะ</th><th></th>
+  </tr></thead><tbody>
+    ${list.map(p=>{
+      const st = expiryStatus(p.docExpireDate);
+      return `<tr class="${st.cls}">
+        <td>${p.name}</td>
+        <td>${p.hn}</td>
+        <td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td>
+        <td>${p.drug==='อื่นๆ'?p.drugOther:p.drug}${p.bevaType?' ('+p.bevaType+')':''}</td>
+        <td>${fmtDate(p.docExpireDate)}</td>
+        <td>${st.badge}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn small ghost" onclick="renderForm('${p.id}')">แก้ไข</button>
+          <button class="btn small secondary" onclick="deletePatient('${p.id}')">ลบ</button>
+        </td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+async function deletePatient(id){
+  if(!confirm('ยืนยันการลบข้อมูลผู้ป่วยรายนี้หรือไม่คะ?')) return;
+  DB.patients = DB.patients.filter(p=>p.id!==id);
+  await savePatients();
+  toast('ลบข้อมูลแล้วค่ะ', '🗑️');
+  renderPatientTable();
+  renderNav();
+}
+
+/* ============ BY DRUG ============ */
+let selectedDrugFilter = null;
+function renderByDrug(){
+  const otherDrugNames = [...new Set(DB.patients.filter(p=>p.drug==='อื่นๆ' && p.drugOther).map(p=>p.drugOther))];
+
+  let html = `
+  <div class="card">
+    <h2>💊 แยกข้อมูลผู้ป่วยตามยา</h2>
+    <p class="subnote">กดปุ่มยาเพื่อดูรายชื่อผู้ป่วยที่ได้รับยานั้นๆ</p>
+    <div class="drug-btn-grid">
+      ${DRUGS.filter(d=>d.key!=='อื่นๆ').map(d=>{
+        const n = DB.patients.filter(p=>p.drug===d.key).length;
+        return `<div class="drug-btn" onclick="filterByDrug('${d.key}')"><span class="n">${d.emoji}</span>${d.key}<span class="cnt">${n} ราย</span></div>`;
+      }).join('')}
+    </div>
+    ${otherDrugNames.length ? `
+      <p class="subnote" style="margin-top:16px;">ยาอื่นๆ ที่มีการบันทึกเพิ่มเติม:</p>
+      <div class="chip-group">
+        ${otherDrugNames.map(n=>`<div class="chip ${selectedDrugFilter==='OTHER::'+n?'selected':''}" onclick="filterByDrug('OTHER::${n}')">📝 ${n} (${DB.patients.filter(p=>p.drug==='อื่นๆ'&&p.drugOther===n).length})</div>`).join('')}
+      </div>
+    ` : ''}
+  </div>
+  <div class="card" id="drugFilterResult"></div>
+  `;
+  document.getElementById('content').innerHTML = html;
+  renderDrugFilterResult();
+}
+function filterByDrug(key){
+  selectedDrugFilter = selectedDrugFilter === key ? null : key;
+  renderByDrug();
+}
+function renderDrugFilterResult(){
+  const wrap = document.getElementById('drugFilterResult');
+  if(!wrap) return;
+  if(!selectedDrugFilter){
+    wrap.innerHTML = `<div class="empty"><span class="em">👆</span>เลือกยาด้านบนเพื่อดูรายชื่อผู้ป่วย</div>`;
+    return;
+  }
+  let list, title;
+  if(selectedDrugFilter.startsWith('OTHER::')){
+    const name = selectedDrugFilter.replace('OTHER::','');
+    list = DB.patients.filter(p=>p.drug==='อื่นๆ' && p.drugOther===name);
+    title = name;
+  } else {
+    list = DB.patients.filter(p=>p.drug===selectedDrugFilter);
+    title = selectedDrugFilter;
+  }
+  const drugInfo = DRUGS.find(d=>d.key===selectedDrugFilter);
+  wrap.innerHTML = `<h2>${drugInfo?drugInfo.emoji:'📝'} ผู้ป่วยที่ได้รับยา: ${title} (${list.length} ราย)</h2>
+  ${list.length ? `<table><thead><tr><th>ชื่อ</th><th>HN</th><th>โรค</th>${drugInfo&&drugInfo.max?'<th>ครั้งที่</th>':''}${title==='Bevacizumab'?'<th>รูปแบบ</th>':''}<th>วันหมดอายุเอกสาร</th><th>สถานะ</th></tr></thead><tbody>
+    ${list.map(p=>{
+      const st = expiryStatus(p.docExpireDate);
+      return `<tr class="${st.cls}">
+        <td>${p.name}</td><td>${p.hn}</td><td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td>
+        ${drugInfo&&drugInfo.max?`<td>${p.doseCount||0}/${drugInfo.max}</td>`:''}
+        ${title==='Bevacizumab'?`<td>${p.bevaType||'-'}</td>`:''}
+        <td>${fmtDate(p.docExpireDate)}</td><td>${st.badge}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>` : `<div class="empty"><span class="em">🌷</span>ยังไม่มีผู้ป่วยที่ได้รับยานี้</div>`}`;
+}
+
+/* ============ EXPIRY ALERTS (grouped) ============ */
+function renderExpiry(){
+  const soon = DB.patients.filter(p=>p.docExpireDate && daysBetween(p.docExpireDate) <= EXPIRY_WARN_DAYS);
+  const groups = {};
+  soon.forEach(p=>{
+    const key = p.docExpireDate;
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+  const sortedDates = Object.keys(groups).sort((a,b)=> new Date(a)-new Date(b));
+
+  let html = `<div class="card">
+    <h2>🔔 แจ้งเตือนเอกสารใกล้หมดอายุ / หมดอายุแล้ว</h2>
+    <p class="subnote">แสดงผู้ป่วยที่เอกสารจะหมดอายุภายใน ${EXPIRY_WARN_DAYS} วัน จัดกลุ่มตามวันหมดอายุเดียวกัน เพื่อสะดวกในการเตรียมเอกสารพร้อมกัน</p>
+  `;
+  if(!sortedDates.length){
+    html += `<div class="empty"><span class="em">🎉</span>ยังไม่มีเอกสารใกล้หมดอายุค่ะ</div></div>`;
+    document.getElementById('content').innerHTML = html;
+    return;
+  }
+  sortedDates.forEach(date=>{
+    const group = groups[date];
+    const diff = daysBetween(date);
+    const isExpired = diff < 0;
+    html += `
+    <div style="margin-top:16px; border:1.5px solid ${isExpired?'var(--danger)':'var(--warn)'}; border-radius:16px; padding:14px 16px; background:${isExpired?'#FDF0F0':'#FFF6EF'};">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <strong>${isExpired?'⛔ หมดอายุแล้ว':'⏰ ใกล้หมดอายุ'}: ${fmtDate(date)} ${!isExpired?`(อีก ${diff} วัน)`:''}</strong>
+        <span class="badge ${isExpired?'danger':'warn'}">กลุ่มผู้ป่วย ${group.length} ราย</span>
+      </div>
+      <table style="margin-top:10px;"><thead><tr><th>ชื่อ</th><th>HN</th><th>โรค</th><th>ยา</th></tr></thead><tbody>
+        ${group.map(p=>`<tr><td>${p.name}</td><td>${p.hn}</td><td>${p.disease==='อื่นๆ'?p.diseaseOther:p.disease}</td><td>${p.drug==='อื่นๆ'?p.drugOther:p.drug}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* ============ CALENDAR ============ */
+function renderCalendar(){
+  const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const firstDay = new Date(calYear, calMonth, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const todayStr = new Date().toDateString();
+
+  let cells = [];
+  for(let i=startWeekday-1; i>=0; i--){
+    cells.push({day: daysInPrevMonth-i, other:true, date:null});
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(calYear, calMonth, d);
+    cells.push({day:d, other:false, date: dateObj});
+  }
+  while(cells.length % 7 !== 0){
+    cells.push({day: cells.length - (startWeekday+daysInMonth) + 1, other:true, date:null});
+  }
+
+  const dow = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  let html = `
+  <div class="card">
+    <div class="cal-head">
+      <button class="btn ghost small" onclick="changeMonth(-1)">← เดือนก่อน</button>
+      <div class="title">📅 ${monthNames[calMonth]} ${calYear+543}</div>
+      <button class="btn ghost small" onclick="changeMonth(1)">เดือนถัดไป →</button>
+    </div>
+    <div class="cal-grid">
+      ${dow.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells.map(c=>{
+        if(c.other || !c.date) return `<div class="cal-cell other-month"><div class="dnum">${c.day}</div></div>`;
+        const dateISO = c.date.toISOString().slice(0,10);
+        const isToday = c.date.toDateString() === todayStr;
+        const appts = DB.appointments.filter(a=>a.date===dateISO);
+        const expiries = DB.patients.filter(p=>p.docExpireDate===dateISO);
+        return `<div class="cal-cell ${isToday?'today':''}" onclick="openDayModal('${dateISO}')">
+          <div class="dnum">${c.day}</div>
+          ${appts.slice(0,2).map(a=>`<div class="evt">🗓️ ${a.patientName}</div>`).join('')}
+          ${expiries.slice(0,1).map(e=>`<div class="evt expiry">⏰ ${e.name} หมดอายุ</div>`).join('')}
+          ${(appts.length+expiries.length)>3?`<div style="font-size:10px; color:var(--text-soft);">+เพิ่มเติม</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  document.getElementById('content').innerHTML = html;
+}
+function changeMonth(delta){
+  calMonth += delta;
+  if(calMonth < 0){ calMonth=11; calYear--; }
+  if(calMonth > 11){ calMonth=0; calYear++; }
+  renderCalendar();
+}
+
+function openDayModal(dateISO){
+  const appts = DB.appointments.filter(a=>a.date===dateISO);
+  const patientOptions = DB.patients.map(p=>`<option value="${p.id}">${p.name} (HN ${p.hn})</option>`).join('');
+  document.getElementById('modalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <h3>📅 นัดหมายวันที่ ${fmtDate(dateISO)}</h3>
+      <div id="apptList">
+        ${appts.length ? appts.map(a=>`
+          <div class="appt-item">
+            <span>👤 ${a.patientName} ${a.note?'— '+a.note:''}</span>
+            <span class="del" onclick="deleteAppt('${a.id}','${dateISO}')">ลบ</span>
+          </div>`).join('') : `<p class="subnote">ยังไม่มีนัดหมายในวันนี้</p>`}
+      </div>
+      <hr style="border:none; border-top:1px solid var(--line); margin:14px 0;">
+      <div class="field">
+        <label>เลือกผู้ป่วย</label>
+        <select id="apptPatient"><option value="">-- เลือกผู้ป่วย --</option>${patientOptions}</select>
+      </div>
+      <div class="field">
+        <label>รายละเอียดนัด</label>
+        <input type="text" id="apptNote" placeholder="เช่น นัดให้ยาครั้งที่ 3">
+      </div>
+      <div class="close-row">
+        <button class="btn secondary" onclick="closeModal()">ปิด</button>
+        <button class="btn" onclick="addAppt('${dateISO}')">➕ เพิ่มนัดหมาย</button>
+      </div>
+    </div>
+  </div>`;
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+async function addAppt(dateISO){
+  const patientId = document.getElementById('apptPatient').value;
+  const note = document.getElementById('apptNote').value.trim();
+  if(!patientId){ toast('กรุณาเลือกผู้ป่วยค่ะ','⚠️'); return; }
+  const patient = DB.patients.find(p=>p.id===patientId);
+  DB.appointments.push({ id: uid(), patientId, patientName: patient.name, date: dateISO, note });
+  await saveAppointments();
+  toast('เพิ่มนัดหมายเรียบร้อยค่ะ 🗓️');
+  openDayModal(dateISO);
+  renderCalendar();
+}
+async function deleteAppt(apptId, dateISO){
+  DB.appointments = DB.appointments.filter(a=>a.id!==apptId);
+  await saveAppointments();
+  toast('ลบนัดหมายแล้วค่ะ','🗑️');
+  openDayModal(dateISO);
+  renderCalendar();
+}
+
+/* ============ SETTINGS ============ */
+function renderSettings(){
+  document.getElementById('content').innerHTML = `
+  <div class="card">
+    <h2>⚙️ ตั้งค่าระบบ</h2>
+    <p class="subnote">เพิ่มช่องข้อมูลเพิ่มเติมของผู้ป่วยได้ในอนาคต เช่น ระยะของมะเร็ง, แพทย์เจ้าของไข้ ฯลฯ ช่องที่เพิ่มจะปรากฏในแบบฟอร์มบันทึกข้อมูลผู้ป่วยโดยอัตโนมัติ</p>
+    <div class="grid2">
+      <div class="field">
+        <label>ชื่อช่องข้อมูลใหม่</label>
+        <input type="text" id="newFieldName" placeholder="เช่น ระยะของมะเร็ง (Stage)">
+      </div>
+      <div class="field" style="display:flex; align-items:flex-end;">
+        <button class="btn" onclick="addCustomField()">➕ เพิ่มช่องข้อมูล</button>
+      </div>
+    </div>
+    <div class="settings-list" id="customFieldList"></div>
+  </div>
+
+  <div class="card">
+    <h2>📦 ข้อมูลระบบ</h2>
+    <p class="subnote">จำนวนผู้ป่วยทั้งหมด: <strong>${DB.patients.length}</strong> ราย<br>
+    จำนวนนัดหมายทั้งหมด: <strong>${DB.appointments.length}</strong> รายการ<br>
+    ช่องข้อมูลเพิ่มเติมที่ตั้งค่าไว้: <strong>${DB.customFields.length}</strong> ช่อง</p>
+  </div>
+  `;
+  renderCustomFieldList();
+}
+function renderCustomFieldList(){
+  const wrap = document.getElementById('customFieldList');
+  if(!DB.customFields.length){
+    wrap.innerHTML = `<div class="empty"><span class="em">⚙️</span>ยังไม่มีช่องข้อมูลเพิ่มเติมค่ะ</div>`;
+    return;
+  }
+  wrap.innerHTML = DB.customFields.map(cf=>`
+    <div class="settings-item">
+      <span>🏷️ ${cf.label}</span>
+      <span class="del" style="color:var(--danger); cursor:pointer; font-weight:600;" onclick="removeCustomField('${cf.id}')">ลบ</span>
+    </div>
+  `).join('');
+}
+async function addCustomField(){
+  const val = document.getElementById('newFieldName').value.trim();
+  if(!val){ toast('กรุณากรอกชื่อช่องข้อมูลค่ะ','⚠️'); return; }
+  DB.customFields.push({ id: uid(), label: val });
+  await saveCustomFields();
+  toast('เพิ่มช่องข้อมูลใหม่เรียบร้อยค่ะ ✨');
+  renderSettings();
+}
+async function removeCustomField(id){
+  if(!confirm('ยืนยันลบช่องข้อมูลนี้หรือไม่คะ?')) return;
+  DB.customFields = DB.customFields.filter(cf=>cf.id!==id);
+  await saveCustomFields();
+  toast('ลบช่องข้อมูลแล้วค่ะ','🗑️');
+  renderSettings();
+}
+
+/* ============ ROUTER ============ */
+function renderContent(){
+  if(currentTab==='dashboard') renderDashboard();
+  else if(currentTab==='form') renderForm();
+  else if(currentTab==='bydrug') renderByDrug();
+  else if(currentTab==='calendar') renderCalendar();
+  else if(currentTab==='expiry') renderExpiry();
+  else if(currentTab==='settings') renderSettings();
+}
+
+/* ============ CLOCK ============ */
+function tickClock(){
+  const now = new Date();
+  const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const str = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear()+543} • ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const el = document.getElementById('clockNow');
+  if(el) el.textContent = str;
+}
+
+/* ============ INIT ============ */
+async function init(){
+  document.getElementById('content').innerHTML = `<div class="card"><div class="empty"><span class="em">🌸</span>กำลังโหลดข้อมูล...</div></div>`;
+  await loadDB();
+  renderNav();
+  renderContent();
+  tickClock();
+  setInterval(tickClock, 30000);
+}
+init();
+</script>
 </body>
 </html>
